@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V05 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V06 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -301,7 +301,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V05 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V06 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -512,6 +512,57 @@
         return trimmed;
       }
       return trimmed;
+    }
+
+    function dropboxDownloadHostUrl(url) {
+      const raw = dropboxRawUrl(url);
+      try {
+        const u = new URL(raw);
+        if (u.hostname.includes("dropbox.com")) {
+          u.hostname = "dl.dropboxusercontent.com";
+          u.searchParams.delete("dl");
+          return u.toString();
+        }
+      } catch (_err) {
+        return raw;
+      }
+      return raw;
+    }
+
+    function allOriginsUrl(url) {
+      return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    }
+
+    async function fetchTextFromUrl(url, source) {
+      const urls = source === "dropbox"
+        ? [
+            dropboxRawUrl(url),
+            dropboxDownloadHostUrl(url),
+            allOriginsUrl(dropboxDownloadHostUrl(url)),
+            allOriginsUrl(dropboxRawUrl(url))
+          ]
+        : [url];
+      const tried = [];
+
+      for (const candidate of urls) {
+        if (!candidate || tried.includes(candidate)) continue;
+        tried.push(candidate);
+        try {
+          const response = await fetch(candidate, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const text = await response.text();
+          if (/^\s*<!doctype html/i.test(text) || /^\s*<html[\s>]/i.test(text)) {
+            throw new Error("received HTML instead of dataset text");
+          }
+          return text;
+        } catch (err) {
+          if (candidate === urls[urls.length - 1]) {
+            throw new Error(`${err.message}; tried ${tried.length} URL form(s)`);
+          }
+        }
+      }
+
+      throw new Error("no readable URL available");
     }
 
     let dropboxLoadTimer = null;
@@ -1058,9 +1109,7 @@
         if (item.file) {
           loadText(await item.file.text(), item.name, item.format || extFormat(item.name));
         } else {
-          const response = await fetch(item.url, { cache: "no-store" });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          loadText(await response.text(), item.name, item.format || extFormat(item.name));
+          loadText(await fetchTextFromUrl(item.url, item.source), item.name, item.format || extFormat(item.name));
         }
       } catch (err) {
         state.records = [];
