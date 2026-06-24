@@ -2,7 +2,7 @@
 
 Static browser version of `jb_A1886_GUItool_check_GEP_dataset_v07.py`.
 
-Current browser title: `A1886 GEP Dataset Checker V06 2026.06.24`.
+Current browser title: `A1886 GEP Dataset Checker V07 2026.06.24`.
 
 ## Use Locally
 
@@ -18,11 +18,12 @@ Recommended Dropbox operation:
 2. Check that the Dropbox filename appears in the file list.
 3. If using another Dropbox file, paste its shared link into the textbox.
 4. Wait for the curve to load automatically.
-5. If the browser blocks direct Dropbox reads, V06 tries alternate Dropbox raw URLs and a CORS proxy fallback.
+5. If the browser blocks direct Dropbox reads, the app tries alternate Dropbox raw URLs and a CORS proxy fallback.
 6. If all remote reads fail, download the file and use `1 Local file`.
 
 The page supports:
 
+- compact one-screen desktop layout for controls and curve
 - LOG JSON-per-line parsing with `fn`, `r0`, optional `r1`, optional `r2`
 - CSV parsing with `fn` and `r0_raw`/`r0`
 - `r0` raw and `r0_deglitch` plot
