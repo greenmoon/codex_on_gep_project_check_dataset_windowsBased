@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A1886 GEP Dataset Checker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #667085;
+      --line: #d7dde5;
+      --blue: #1f64d1;
+      --red: #cf2e2e;
+      --green: #16803c;
+      --focus: #0d9488;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .version {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 12px;
+      padding: 12px;
+      min-height: calc(100vh - 55px);
+    }
+
+    aside,
+    .workspace {
+      min-width: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    aside {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-rows: auto minmax(360px, 1fr) auto;
+      overflow: hidden;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .control {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    label,
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    button {
+      min-width: 0;
+      font: inherit;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      height: 34px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--focus);
+    }
+
+    button {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button:hover,
+    input:focus,
+    select:focus {
+      border-color: var(--focus);
+      outline: none;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .segmented button {
+      border: 0;
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .segmented button.active {
+      background: var(--focus);
+      color: #fff;
+    }
+
+    .file-drop {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px dashed #aab3c2;
+      border-radius: 8px;
+      background: #fbfcfe;
+      text-align: center;
+    }
+
+    .file-drop input {
+      width: 100%;
+    }
+
+    .meta {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .checks {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .checks label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--ink);
+      font-weight: 400;
+    }
+
+    .chart-wrap {
+      position: relative;
+      min-height: 360px;
+      background: #fff;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .status {
+      padding: 10px 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      min-height: 38px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 0 12px 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .swatch {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+
+      .workspace {
+        min-height: 560px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>A1886 GEP Dataset Checker</h1>
+    <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
+  </header>
+
+  <main>
+    <aside>
+      <div class="control">
+        <div class="label">Input Format</div>
+        <div class="segmented" role="group" aria-label="Input format">
+          <button id="fmtLog" class="active" type="button">LOG</button>
+          <button id="fmtCsv" type="button">CSV</button>
+        </div>
+      </div>
+
+      <div class="file-drop">
+        <label for="fileInput">Open dataset file</label>
+        <input id="fileInput" type="file" accept=".log,.txt,.json,.jsonl,.csv">
+      </div>
+
+      <div class="control">
+        <label for="sampleSelect">Included files</label>
+        <select id="sampleSelect">
+          <option value="">Select local sample</option>
+          <option value="screen to head 30cm.csv" data-format="CSV">screen to head 30cm.csv</option>
+          <option value="to people80cm.csv" data-format="CSV">to people80cm.csv</option>
+          <option value="sensor_moving_after2h.log" data-format="LOG">sensor_moving_after2h.log</option>
+          <option value="sensor_static_1.5h.log" data-format="LOG">sensor_static_1.5h.log</option>
+        </select>
+      </div>
+
+      <div class="checks">
+        <label><input id="showR1" type="checkbox"> r1</label>
+        <label><input id="showR2" type="checkbox"> r2</label>
+      </div>
+
+      <div class="meta" id="infoBox">No file loaded.</div>
+    </aside>
+
+    <section class="workspace">
+      <div class="controls">
+        <div class="control">
+          <label for="windowSize">Window size N</label>
+          <input id="windowSize" type="number" min="10" max="100000" step="1" value="200">
+        </div>
+        <div class="control">
+          <label for="startFn">Start fn</label>
+          <input id="startFn" type="number" step="1" value="0">
+        </div>
+        <div class="control">
+          <label for="frameMs">Frame tick</label>
+          <input id="frameMs" type="number" min="1" max="10000" step="0.001" value="50.000">
+        </div>
+        <div class="control">
+          <label for="medianWin">Median win</label>
+          <input id="medianWin" type="number" min="3" max="31" step="2" value="5">
+        </div>
+        <div class="control">
+          <label for="spikeTh">Spike TH m</label>
+          <input id="spikeTh" type="number" min="0.01" max="1" step="0.001" value="0.130">
+        </div>
+        <div class="control">
+          <label for="jumpTh">Jump TH m</label>
+          <input id="jumpTh" type="number" min="0.01" max="1.5" step="0.001" value="0.253">
+        </div>
+        <div class="control" style="grid-column: span 2;">
+          <label for="startSlider">Slide start fn</label>
+          <input id="startSlider" type="range" min="0" max="0" step="1" value="0">
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+      </div>
+      <div>
+        <div class="legend">
+          <span class="key" style="color: var(--blue);"><span class="swatch"></span>r0 raw</span>
+          <span class="key" style="color: var(--red);"><span class="swatch"></span>r0_deglitch</span>
+          <span class="key" style="color: #7c3aed;"><span class="swatch"></span>r1/r2 optional</span>
+        </div>
+        <div class="status" id="status">Ready.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const DEFAULTS = {
+      medianWin: 5,
+      spikeTh: 0.130,
+      jumpTh: 0.253,
+      frameMs: 50.0,
+      zoomIn: 0.8,
+      zoomOut: 1.25
+    };
+
+    const state = {
+      format: "LOG",
+      fileName: "",
+      records: [],
+      firstFn: 0,
+      lastFn: 0,
+      selectedFn: null,
+      selectedRatio: 0.5,
+      current: { records: [], fns: [], r0s: [], deg: [] },
+      parseInfo: {}
+    };
+
+    const els = {
+      fmtLog: document.getElementById("fmtLog"),
+      fmtCsv: document.getElementById("fmtCsv"),
+      fileInput: document.getElementById("fileInput"),
+      sampleSelect: document.getElementById("sampleSelect"),
+      infoBox: document.getElementById("infoBox"),
+      status: document.getElementById("status"),
+      canvas: document.getElementById("chart"),
+      windowSize: document.getElementById("windowSize"),
+      startFn: document.getElementById("startFn"),
+      frameMs: document.getElementById("frameMs"),
+      medianWin: document.getElementById("medianWin"),
+      spikeTh: document.getElementById("spikeTh"),
+      jumpTh: document.getElementById("jumpTh"),
+      startSlider: document.getElementById("startSlider"),
+      showR1: document.getElementById("showR1"),
+      showR2: document.getElementById("showR2")
+    };
+
+    const ctx = els.canvas.getContext("2d");
+    let plotBox = null;
+
+    function setFormat(format) {
+      state.format = format;
+      els.fmtLog.classList.toggle("active", format === "LOG");
+      els.fmtCsv.classList.toggle("active", format === "CSV");
+    }
+
+    function parseLog(text) {
+      const byFn = new Map();
+      for (const line of text.split(/\r?\n/)) {
+        const s = line.trim();
+        if (!s.startsWith("{")) continue;
+        const match = s.match(/\{.*?\}/);
+        if (!match) continue;
+        try {
+          const d = JSON.parse(match[0]);
+          if (d.fn === undefined || d.r0 === undefined) continue;
+          const rec = {
+            fn: Number.parseInt(d.fn, 10),
+            r0: Number(d.r0),
+            r1: d.r1 === undefined || d.r1 === null || d.r1 === "" ? null : Number(d.r1),
+            r2: d.r2 === undefined || d.r2 === null || d.r2 === "" ? null : Number(d.r2)
+          };
+          if (Number.isFinite(rec.fn) && Number.isFinite(rec.r0)) byFn.set(rec.fn, rec);
+        } catch (_err) {
+          continue;
+        }
+      }
+      state.parseInfo = { mode: "LOG", fn_key: "fn", r0_key: "r0", r1_key: "r1", r2_key: "r2" };
+      return Array.from(byFn.keys()).sort((a, b) => a - b).map((fn) => byFn.get(fn));
+    }
+
+    function parseCsvLine(line) {
+      const out = [];
+      let cur = "";
+      let quoted = false;
+      for (let i = 0; i < line.length; i += 1) {
+        const ch = line[i];
+        if (ch === "\"") {
+          if (quoted && line[i + 1] === "\"") {
+            cur += "\"";
+            i += 1;
+          } else {
+            quoted = !quoted;
+          }
+        } else if (ch === "," && !quoted) {
+          out.push(cur);
+          cur = "";
+        } else {
+          cur += ch;
+        }
+      }
+      out.push(cur);
+      return out;
+    }
+
+    function firstExistingKey(headers, candidates) {
+      const lowerToReal = new Map(headers.map((h) => [String(h).trim().toLowerCase(), String(h).trim()]));
+      for (const c of candidates) {
+        const key = String(c).trim().toLowerCase();
+        if (lowerToReal.has(key)) return lowerToReal.get(key);
+      }
+      return null;
+    }
+
+    function parseCsv(text) {
+      const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim() !== "");
+      if (!lines.length) return [];
+      const headers = parseCsvLine(lines[0]).map((h) => h.trim());
+      const fnKey = firstExistingKey(headers, ["fn", "frame", "frame_number", "frame_id"]);
+      const r0Key = firstExistingKey(headers, ["r0_raw", "r0", "r0_hampel_gate", "r0_filtered_ewma", "range0", "range_0"]);
+      const r1Key = firstExistingKey(headers, ["r1", "range1", "range_1"]);
+      const r2Key = firstExistingKey(headers, ["r2", "range2", "range_2"]);
+      const pcTimeKey = firstExistingKey(headers, ["pc_time", "time", "timestamp", "datetime"]);
+
+      state.parseInfo = {
+        mode: "CSV",
+        fn_key: String(fnKey),
+        r0_key: String(r0Key),
+        r1_key: String(r1Key),
+        r2_key: String(r2Key),
+        pc_time_key: String(pcTimeKey)
+      };
+
+      if (!fnKey || !r0Key) {
+        throw new Error(`CSV missing required columns. Need fn and r0/r0_raw. Found columns: ${headers.join(", ")}`);
+      }
+
+      const index = Object.fromEntries(headers.map((h, i) => [h, i]));
+      const byFn = new Map();
+      let autoFn = 0;
+      for (let i = 1; i < lines.length; i += 1) {
+        const row = parseCsvLine(lines[i]);
+        try {
+          const fnText = String(row[index[fnKey]] ?? "").trim();
+          const fn = fnText === "" ? autoFn : Number.parseInt(Number(fnText), 10);
+          const r0 = Number(String(row[index[r0Key]] ?? "").trim());
+          const r1Text = r1Key ? String(row[index[r1Key]] ?? "").trim() : "";
+          const r2Text = r2Key ? String(row[index[r2Key]] ?? "").trim() : "";
+          const rec = {
+            fn,
+            r0,
+            r1: r1Text === "" ? null : Number(r1Text),
+            r2: r2Text === "" ? null : Number(r2Text)
+          };
+          if (Number.isFinite(rec.fn) && Number.isFinite(rec.r0)) byFn.set(rec.fn, rec);
+        } catch (_err) {
+          // Keep browser behavior aligned with the PyQt tool: skip malformed rows.
+        }
+        autoFn += 1;
+      }
+      return Array.from(byFn.keys()).sort((a, b) => a - b).map((fn) => byFn.get(fn));
+    }
+
+    function forceOddMedianWin(value) {
+      let v = Math.max(3, Math.min(31, Number.parseInt(value, 10) || DEFAULTS.medianWin));
+      if (v % 2 === 0) v = v < 31 ? v + 1 : v - 1;
+      return v;
+    }
+
+    function deglitch(r0s, medianWin, spikeTh, jumpTh) {
+      if (!r0s.length) return [];
+      if (r0s.length < 3) return [...r0s];
+      let win = Math.max(3, Number.parseInt(medianWin, 10) || DEFAULTS.medianWin);
+      if (win % 2 === 0) win += 1;
+      const half = Math.floor(win / 2);
+      const out = [];
+      let prevValid = Number(r0s[0]);
+
+      for (let k = 0; k < r0s.length; k += 1) {
+        const x = Number(r0s[k]);
+        const a = Math.max(0, k - half);
+        const b = Math.min(r0s.length, k + half + 1);
+        const local = r0s.slice(a, b).map(Number).sort((p, q) => p - q);
+        const med = local[Math.floor(local.length / 2)];
+        const spikeFlag = Math.abs(x - med) > spikeTh;
+        const jumpFlag = Math.abs(x - prevValid) > jumpTh && Math.abs(med - prevValid) <= spikeTh;
+        const y = spikeFlag || jumpFlag ? med : x;
+        out.push(y);
+        prevValid = y;
+      }
+      return out;
+    }
+
+    function elapsedHms(fn) {
+      const frameMs = Number(els.frameMs.value) || DEFAULTS.frameMs;
+      let totalSec = Math.round((fn - state.firstFn) * frameMs / 1000);
+      if (totalSec < 0) totalSec = 0;
+      const hh = Math.floor(totalSec / 3600);
+      const mm = Math.floor((totalSec % 3600) / 60);
+      const ss = totalSec % 60;
+      return [hh, mm, ss].map((v) => String(v).padStart(2, "0")).join(":");
+    }
+
+    function loadText(text, fileName, format) {
+      setFormat(format || state.format);
+      state.fileName = fileName || "";
+      state.records = state.format === "CSV" ? parseCsv(text) : parseLog(text);
+      state.selectedFn = null;
+      state.selectedRatio = 0.5;
+
+      if (!state.records.length) throw new Error("No valid records found.");
+      state.firstFn = state.records[0].fn;
+      state.lastFn = state.records[state.records.length - 1].fn;
+      els.windowSize.value = String(Math.max(10, state.records.length));
+      syncStartControls(state.firstFn);
+      updateInfo();
+      draw();
+    }
+
+    function syncStartControls(nextValue) {
+      if (!state.records.length) return;
+      const n = Math.max(10, Number.parseInt(els.windowSize.value, 10) || 10);
+      const maxStart = Math.max(state.firstFn, state.lastFn - n + 1);
+      let value = nextValue === undefined ? Number.parseInt(els.startFn.value, 10) : Number.parseInt(nextValue, 10);
+      if (!Number.isFinite(value)) value = state.firstFn;
+      value = Math.max(state.firstFn, Math.min(maxStart, value));
+      els.startFn.min = String(state.firstFn);
+      els.startFn.max = String(maxStart);
+      els.startFn.value = String(value);
+      els.startSlider.min = String(state.firstFn);
+      els.startSlider.max = String(maxStart);
+      els.startSlider.value = String(value);
+    }
+
+    function updateInfo() {
+      if (!state.records.length) {
+        els.infoBox.textContent = "No file loaded.";
+        return;
+      }
+      const p = state.parseInfo;
+      els.infoBox.innerHTML = [
+        `<strong>${escapeHtml(state.fileName || "dataset")}</strong>`,
+        `Format: ${p.mode}`,
+        `Records: ${state.records.length}`,
+        `fn: ${state.firstFn} .. ${state.lastFn}`,
+        `Columns: fn=${p.fn_key}, r0=${p.r0_key}, r1=${p.r1_key}, r2=${p.r2_key}`
+      ].join("<br>");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[ch]));
+    }
+
+    function resizeCanvas() {
+      const rect = els.canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      els.canvas.width = Math.max(320, Math.floor(rect.width * dpr));
+      els.canvas.height = Math.max(320, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function xToPx(fn) {
+      return plotBox.left + (fn - plotBox.xMin) / (plotBox.xMax - plotBox.xMin || 1) * plotBox.width;
+    }
+
+    function yToPx(y) {
+      return plotBox.top + (plotBox.yMax - y) / (plotBox.yMax - plotBox.yMin || 1) * plotBox.height;
+    }
+
+    function drawLine(points, color, width) {
+      if (!points.length) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = xToPx(p.fn);
+        const y = yToPx(p.y);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.fillStyle = color;
+      const stride = Math.max(1, Math.floor(points.length / 1800));
+      for (let i = 0; i < points.length; i += stride) {
+        const p = points[i];
+        ctx.beginPath();
+        ctx.arc(xToPx(p.fn), yToPx(p.y), 1.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawLabel(text, x, y, fill, stroke) {
+      const lines = text.split("\n");
+      ctx.font = "12px Arial";
+      const w = Math.max(...lines.map((line) => ctx.measureText(line).width)) + 12;
+      const h = lines.length * 15 + 8;
+      const bx = Math.min(Math.max(8, x), els.canvas.clientWidth - w - 8);
+      const by = Math.min(Math.max(8, y), els.canvas.clientHeight - h - 8);
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = stroke || "#9aa4b2";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, w, h, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#17202a";
+      lines.forEach((line, i) => ctx.fillText(line, bx + 6, by + 17 + i * 15));
+    }
+
+    function drawAxes(selected) {
+      ctx.clearRect(0, 0, els.canvas.clientWidth, els.canvas.clientHeight);
+      const w = els.canvas.clientWidth;
+      const h = els.canvas.clientHeight;
+      plotBox = {
+        left: 62,
+        top: 54,
+        width: Math.max(120, w - 92),
+        height: Math.max(120, h - 112),
+        xMin: selected[0]?.fn ?? 0,
+        xMax: selected[selected.length - 1]?.fn ?? 1,
+        yMin: 0,
+        yMax: 2
+      };
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "#d7dde5";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(plotBox.left, plotBox.top, plotBox.width, plotBox.height);
+
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "#667085";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      for (let i = 0; i <= 4; i += 1) {
+        const yVal = i * 0.5;
+        const y = yToPx(yVal);
+        ctx.strokeStyle = "#edf0f4";
+        ctx.beginPath();
+        ctx.moveTo(plotBox.left, y);
+        ctx.lineTo(plotBox.left + plotBox.width, y);
+        ctx.stroke();
+        ctx.fillText(yVal.toFixed(1), plotBox.left - 8, y);
+      }
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      const frameMs = Number(els.frameMs.value) || DEFAULTS.frameMs;
+      for (let i = 0; i <= 5; i += 1) {
+        const fn = Math.round(plotBox.xMin + (plotBox.xMax - plotBox.xMin) * i / 5);
+        const x = xToPx(fn);
+        ctx.strokeStyle = "#edf0f4";
+        ctx.beginPath();
+        ctx.moveTo(x, plotBox.top);
+        ctx.lineTo(x, plotBox.top + plotBox.height);
+        ctx.stroke();
+        ctx.fillStyle = "#667085";
+        ctx.fillText(String(fn), x, plotBox.top + plotBox.height + 8);
+        const elapsedMin = (fn - state.firstFn) * frameMs / 1000 / 60;
+        ctx.fillText(elapsedMin.toFixed(2), x, 25);
+      }
+
+      ctx.fillStyle = "#17202a";
+      ctx.font = "13px Arial";
+      ctx.fillText("elapsed time from first fn / min", plotBox.left + plotBox.width / 2, 7);
+      ctx.fillText("frame number fn", plotBox.left + plotBox.width / 2, plotBox.top + plotBox.height + 30);
+
+      ctx.save();
+      ctx.translate(18, plotBox.top + plotBox.height / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText("range r / meter", 0, 0);
+      ctx.restore();
+    }
+
+    function draw() {
+      resizeCanvas();
+      if (!state.records.length) {
+        ctx.clearRect(0, 0, els.canvas.clientWidth, els.canvas.clientHeight);
+        els.status.textContent = "Ready.";
+        return;
+      }
+
+      const median = forceOddMedianWin(els.medianWin.value);
+      els.medianWin.value = String(median);
+      syncStartControls();
+      const startFn = Number.parseInt(els.startFn.value, 10);
+      const n = Math.max(10, Number.parseInt(els.windowSize.value, 10) || 10);
+      const endFn = startFn + n - 1;
+      const selected = state.records.filter((r) => r.fn >= startFn && r.fn <= endFn);
+      state.current.records = selected;
+
+      if (!selected.length) {
+        drawAxes([{ fn: startFn }, { fn: endFn }]);
+        els.status.textContent = `No data in selected window: fn ${startFn} .. ${endFn}`;
+        return;
+      }
+
+      const fns = selected.map((r) => r.fn);
+      const r0s = selected.map((r) => r.r0);
+      const deg = deglitch(r0s, median, Number(els.spikeTh.value), Number(els.jumpTh.value));
+      state.current = { records: selected, fns, r0s, deg };
+
+      drawAxes(selected);
+      drawLine(selected.map((r) => ({ fn: r.fn, y: r.r0 })), "#1f64d1", 1.2);
+      drawLine(selected.map((r, i) => ({ fn: r.fn, y: deg[i] })), "#cf2e2e", 1.6);
+      if (els.showR1.checked && selected.some((r) => r.r1 !== null)) {
+        drawLine(selected.filter((r) => r.r1 !== null).map((r) => ({ fn: r.fn, y: r.r1 })), "#7c3aed", 1.1);
+      }
+      if (els.showR2.checked && selected.some((r) => r.r2 !== null)) {
+        drawLine(selected.filter((r) => r.r2 !== null).map((r) => ({ fn: r.fn, y: r.r2 })), "#0891b2", 1.1);
+      }
+
+      const first = selected[0];
+      const last = selected[selected.length - 1];
+      for (const rec of [first, last]) {
+        const tmin = (rec.fn - state.firstFn) * (Number(els.frameMs.value) || DEFAULTS.frameMs) / 1000 / 60;
+        drawLabel(`fn=${rec.fn}\nt=${tmin.toFixed(3)}m\nr0=${rec.r0.toFixed(3)}`, xToPx(rec.fn) + 8, yToPx(rec.r0) + 8, "rgba(255,255,255,0.86)");
+      }
+
+      if (state.selectedFn !== null) {
+        const idx = fns.indexOf(state.selectedFn);
+        if (idx >= 0) {
+          const rec = selected[idx];
+          const x = xToPx(rec.fn);
+          ctx.strokeStyle = "#16803c";
+          ctx.setLineDash([5, 4]);
+          ctx.beginPath();
+          ctx.moveTo(x, plotBox.top);
+          ctx.lineTo(x, plotBox.top + plotBox.height);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = "#1f64d1";
+          ctx.beginPath();
+          ctx.arc(x, yToPx(rec.r0), 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#cf2e2e";
+          ctx.beginPath();
+          ctx.arc(x, yToPx(deg[idx]), 4, 0, Math.PI * 2);
+          ctx.fill();
+          drawLabel(`fn=${rec.fn}\nt=${elapsedHms(rec.fn)}\nr0=${rec.r0.toFixed(3)}`, x + 12, yToPx(rec.r0) + 14, "#fff9c4", "#17202a");
+        }
+      }
+
+      const frameMs = Number(els.frameMs.value) || DEFAULTS.frameMs;
+      const elapsedStartMin = (startFn - state.firstFn) * frameMs / 1000 / 60;
+      const elapsedEndMin = (fns[fns.length - 1] - state.firstFn) * frameMs / 1000 / 60;
+      let status = `Plot OK | start_fn=${startFn}, window=${n}, records=${selected.length}, median_win=${median}, spike_TH=${Number(els.spikeTh.value).toFixed(3)}m, jump_TH=${Number(els.jumpTh.value).toFixed(3)}m, time=${elapsedStartMin.toFixed(3)}..${elapsedEndMin.toFixed(3)} min`;
+      if (state.selectedFn !== null && fns.includes(state.selectedFn)) {
+        const rec = selected[fns.indexOf(state.selectedFn)];
+        status += ` | selected fn=${rec.fn}, t=${elapsedHms(rec.fn)}, r0=${rec.r0.toFixed(3)}`;
+      }
+      els.status.textContent = status;
+    }
+
+    function nearestPoint(clientX, clientY) {
+      if (!plotBox || !state.current.fns.length) return null;
+      const rect = els.canvas.getBoundingClientRect();
+      const ex = clientX - rect.left;
+      const ey = clientY - rect.top;
+      let best = null;
+      let bestD2 = Infinity;
+      state.current.records.forEach((rec) => {
+        const dx = xToPx(rec.fn) - ex;
+        const dy = yToPx(rec.r0) - ey;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < bestD2) {
+          bestD2 = d2;
+          best = rec;
+        }
+      });
+      return bestD2 <= 12 * 12 ? best : null;
+    }
+
+    els.fmtLog.addEventListener("click", () => setFormat("LOG"));
+    els.fmtCsv.addEventListener("click", () => setFormat("CSV"));
+
+    els.fileInput.addEventListener("change", async () => {
+      const file = els.fileInput.files[0];
+      if (!file) return;
+      const guessed = file.name.toLowerCase().endsWith(".csv") ? "CSV" : state.format;
+      try {
+        loadText(await file.text(), file.name, guessed);
+      } catch (err) {
+        state.records = [];
+        updateInfo();
+        draw();
+        els.status.textContent = `[ERROR] parse failed: ${err.message}`;
+      }
+    });
+
+    els.sampleSelect.addEventListener("change", async () => {
+      const option = els.sampleSelect.selectedOptions[0];
+      if (!option || !option.value) return;
+      try {
+        const response = await fetch(option.value);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        loadText(await response.text(), option.value, option.dataset.format);
+      } catch (err) {
+        els.status.textContent = `Could not load sample file. If opened by file://, use the upload control instead. Details: ${err.message}`;
+      }
+    });
+
+    for (const el of [els.windowSize, els.startFn, els.frameMs, els.medianWin, els.spikeTh, els.jumpTh, els.showR1, els.showR2]) {
+      el.addEventListener("input", draw);
+      el.addEventListener("change", draw);
+    }
+
+    els.startSlider.addEventListener("input", () => {
+      els.startFn.value = els.startSlider.value;
+      draw();
+    });
+
+    els.canvas.addEventListener("click", (event) => {
+      const rec = nearestPoint(event.clientX, event.clientY);
+      if (!rec) return;
+      state.selectedFn = rec.fn;
+      const startFn = Number.parseInt(els.startFn.value, 10);
+      const n = Math.max(1, Number.parseInt(els.windowSize.value, 10) || 1);
+      state.selectedRatio = Math.max(0, Math.min(1, (rec.fn - startFn) / Math.max(1, n - 1)));
+      draw();
+    });
+
+    els.canvas.addEventListener("wheel", (event) => {
+      if (!state.records.length) return;
+      event.preventDefault();
+      const oldN = Math.max(10, Number.parseInt(els.windowSize.value, 10) || 10);
+      let newN = Math.round(oldN * (event.deltaY < 0 ? DEFAULTS.zoomIn : DEFAULTS.zoomOut));
+      newN = Math.max(10, Math.min(100000, newN));
+      newN = Math.min(newN, Math.max(10, state.records.length));
+      if (newN === oldN) return;
+      const anchorFn = state.selectedFn !== null ? state.selectedFn : Number.parseInt(els.startFn.value, 10) + Math.floor(oldN / 2);
+      const ratio = state.selectedFn !== null ? state.selectedRatio : 0.5;
+      const newStart = Math.round(anchorFn - ratio * Math.max(1, newN - 1));
+      els.windowSize.value = String(newN);
+      syncStartControls(newStart);
+      draw();
+    }, { passive: false });
+
+    window.addEventListener("resize", draw);
+    setFormat("LOG");
+    draw();
+  </script>
+</body>
+</html>
