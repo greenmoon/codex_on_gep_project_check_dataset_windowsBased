@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V09 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V10 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -314,7 +314,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V09 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V10 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -354,6 +354,7 @@
       <div class="checks">
         <label><input id="showR1" type="checkbox"> r1</label>
         <label><input id="showR2" type="checkbox"> r2</label>
+        <label><input id="enableRule01" type="checkbox"> Enable rule01</label>
       </div>
 
       <div class="meta" id="infoBox">No file loaded.</div>
@@ -385,6 +386,14 @@
           <label for="jumpTh">Jump TH m</label>
           <input id="jumpTh" type="number" min="0.01" max="1.5" step="0.001" value="0.253">
         </div>
+        <div class="control">
+          <label for="ruleBaseRangeTh">rule_base_range_TH</label>
+          <input id="ruleBaseRangeTh" type="number" min="0.1" max="3" step="0.01" value="1.1">
+        </div>
+        <div class="control">
+          <label for="ruleBaseRangeSlider">Rule TH slider</label>
+          <input id="ruleBaseRangeSlider" type="range" min="0.1" max="3" step="0.01" value="1.1">
+        </div>
         <div class="control" style="grid-column: span 2;">
           <label for="startSlider">Slide start fn</label>
           <input id="startSlider" type="range" min="0" max="0" step="1" value="0">
@@ -410,6 +419,7 @@
       medianWin: 9,
       spikeTh: 0.065,
       jumpTh: 0.253,
+      ruleBaseRangeTh: 1.1,
       frameMs: 50.0,
       zoomIn: 0.8,
       zoomOut: 1.25,
@@ -451,9 +461,12 @@
       medianWin: document.getElementById("medianWin"),
       spikeTh: document.getElementById("spikeTh"),
       jumpTh: document.getElementById("jumpTh"),
+      ruleBaseRangeTh: document.getElementById("ruleBaseRangeTh"),
+      ruleBaseRangeSlider: document.getElementById("ruleBaseRangeSlider"),
       startSlider: document.getElementById("startSlider"),
       showR1: document.getElementById("showR1"),
-      showR2: document.getElementById("showR2")
+      showR2: document.getElementById("showR2"),
+      enableRule01: document.getElementById("enableRule01")
     };
 
     const ctx = els.canvas.getContext("2d");
@@ -790,6 +803,23 @@
       return out;
     }
 
+    function applyRule01(values, threshold, enabled) {
+      const out = [...values];
+      const changed = new Array(values.length).fill(false);
+      if (!enabled || out.length < 2) return { values: out, changed };
+
+      const th = Number.isFinite(threshold) ? threshold : DEFAULTS.ruleBaseRangeTh;
+      for (let k = 0; k < out.length - 1; k += 1) {
+        const oldR0 = out[k];
+        const newR0 = out[k + 1];
+        if (Number.isFinite(oldR0) && Number.isFinite(newR0) && newR0 >= th) {
+          out[k + 1] = oldR0;
+          changed[k + 1] = true;
+        }
+      }
+      return { values: out, changed };
+    }
+
     function elapsedHms(fn) {
       const frameMs = Number(els.frameMs.value) || DEFAULTS.frameMs;
       let totalSec = Math.round((fn - state.firstFn) * frameMs / 1000);
@@ -891,6 +921,19 @@
         ctx.beginPath();
         ctx.arc(xToPx(p.fn), yToPx(p.y), 1.7, 0, Math.PI * 2);
         ctx.fill();
+      }
+    }
+
+    function drawMarkers(points, color, radius) {
+      if (!points.length) return;
+      ctx.fillStyle = color;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.2;
+      for (const p of points) {
+        ctx.beginPath();
+        ctx.arc(xToPx(p.fn), yToPx(p.y), radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
       }
     }
 
@@ -1002,12 +1045,18 @@
 
       const fns = selected.map((r) => r.fn);
       const r0s = selected.map((r) => r.r0);
-      const deg = deglitch(r0s, median, Number(els.spikeTh.value), Number(els.jumpTh.value));
+      const baseDeg = deglitch(r0s, median, Number(els.spikeTh.value), Number(els.jumpTh.value));
+      const ruleTh = Number(els.ruleBaseRangeTh.value) || DEFAULTS.ruleBaseRangeTh;
+      const rule01 = applyRule01(baseDeg, ruleTh, els.enableRule01.checked);
+      const deg = rule01.values;
       state.current = { records: selected, fns, r0s, deg };
 
       drawAxes(selected);
       drawLine(selected.map((r) => ({ fn: r.fn, y: r.r0 })), "#1f64d1", 1.2);
       drawLine(selected.map((r, i) => ({ fn: r.fn, y: deg[i] })), "#cf2e2e", 1.6);
+      drawMarkers(selected
+        .map((r, i) => rule01.changed[i] ? { fn: r.fn, y: deg[i] } : null)
+        .filter(Boolean), "#16803c", 4.5);
       if (els.showR1.checked && selected.some((r) => r.r1 !== null)) {
         drawLine(selected.filter((r) => r.r1 !== null).map((r) => ({ fn: r.fn, y: r.r1 })), "#7c3aed", 1.1);
       }
@@ -1049,7 +1098,8 @@
       const frameMs = Number(els.frameMs.value) || DEFAULTS.frameMs;
       const elapsedStartMin = (startFn - state.firstFn) * frameMs / 1000 / 60;
       const elapsedEndMin = (fns[fns.length - 1] - state.firstFn) * frameMs / 1000 / 60;
-      let status = `Plot OK | start_fn=${startFn}, window=${n}, records=${selected.length}, median_win=${median}, spike_TH=${Number(els.spikeTh.value).toFixed(3)}m, jump_TH=${Number(els.jumpTh.value).toFixed(3)}m, time=${elapsedStartMin.toFixed(3)}..${elapsedEndMin.toFixed(3)} min`;
+      const ruleCount = rule01.changed.filter(Boolean).length;
+      let status = `Plot OK | start_fn=${startFn}, window=${n}, records=${selected.length}, median_win=${median}, spike_TH=${Number(els.spikeTh.value).toFixed(3)}m, jump_TH=${Number(els.jumpTh.value).toFixed(3)}m, rule01=${els.enableRule01.checked ? "on" : "off"}, rule_TH=${ruleTh.toFixed(2)}m, rule_hits=${ruleCount}, time=${elapsedStartMin.toFixed(3)}..${elapsedEndMin.toFixed(3)} min`;
       if (state.selectedFn !== null && fns.includes(state.selectedFn)) {
         const rec = selected[fns.indexOf(state.selectedFn)];
         status += ` | selected fn=${rec.fn}, t=${elapsedHms(rec.fn)}, r0=${rec.r0.toFixed(3)}`;
@@ -1137,13 +1187,23 @@
 
     els.fileSelect.addEventListener("change", openSelectedFile);
 
-    for (const el of [els.windowSize, els.startFn, els.frameMs, els.medianWin, els.spikeTh, els.jumpTh, els.showR1, els.showR2]) {
+    for (const el of [els.windowSize, els.startFn, els.frameMs, els.medianWin, els.spikeTh, els.jumpTh, els.showR1, els.showR2, els.enableRule01]) {
       el.addEventListener("input", draw);
       el.addEventListener("change", draw);
     }
 
     els.startSlider.addEventListener("input", () => {
       els.startFn.value = els.startSlider.value;
+      draw();
+    });
+
+    els.ruleBaseRangeTh.addEventListener("input", () => {
+      els.ruleBaseRangeSlider.value = els.ruleBaseRangeTh.value;
+      draw();
+    });
+
+    els.ruleBaseRangeSlider.addEventListener("input", () => {
+      els.ruleBaseRangeTh.value = Number(els.ruleBaseRangeSlider.value).toFixed(2);
       draw();
     });
 
