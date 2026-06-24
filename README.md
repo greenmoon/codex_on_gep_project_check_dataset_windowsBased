@@ -2,7 +2,7 @@
 
 Static browser version of `jb_A1886_GUItool_check_GEP_dataset_v07.py`.
 
-Current browser title: `A1886 GEP Dataset Checker V04 2026.06.24`.
+Current browser title: `A1886 GEP Dataset Checker V05 2026.06.24`.
 
 ## Use Locally
 
@@ -10,7 +10,15 @@ Open `index.html` in a browser, then choose one source:
 
 - `1 Local file`: select one or more `.csv` / `.log` files from this PC, then pick one from the list to show the curve
 - `2 GitHub file`: defaults to `to people80cm.csv` and shows the curve directly
-- `3 Dropbox link`: loads the default Dropbox CSV link, or uses a pasted Dropbox manifest/direct CSV/LOG link and shows the selected curve
+- `3 Dropbox link`: loads the default Dropbox CSV link, or paste a Dropbox direct CSV/LOG link into the textbox and wait for the curve to load automatically
+
+Recommended Dropbox operation:
+
+1. Click `3 Dropbox link`.
+2. Check that the Dropbox filename appears in the file list.
+3. If using another Dropbox file, paste its shared link into the textbox.
+4. Wait for the curve to load automatically.
+5. If the browser blocks the Dropbox read, download the file and use `1 Local file`.
 
 The page supports:
 

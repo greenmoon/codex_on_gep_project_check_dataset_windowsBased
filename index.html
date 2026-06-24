@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V04 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V05 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -301,7 +301,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V04 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V05 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -328,7 +328,7 @@
         <label id="sourceHint" class="hidden" for="fileInput"></label>
         <input id="fileInput" class="hidden" type="file" accept=".log,.txt,.json,.jsonl,.csv" multiple>
         <div id="dropboxPanel" class="hidden">
-          <textarea id="dropboxLinks" placeholder="Dropbox shared CSV/LOG link"></textarea>
+          <textarea id="dropboxLinks" placeholder="Paste Dropbox CSV/LOG link here. Curve loads automatically after paste."></textarea>
         </div>
       </div>
 
@@ -514,6 +514,16 @@
       return trimmed;
     }
 
+    let dropboxLoadTimer = null;
+
+    function scheduleDropboxLoad() {
+      if (state.source !== "dropbox") setSource("dropbox");
+      window.clearTimeout(dropboxLoadTimer);
+      dropboxLoadTimer = window.setTimeout(() => {
+        listDropboxFiles(true);
+      }, 500);
+    }
+
     async function fetchRepoFiles(autoOpen = false) {
       setSource("repo");
       els.sourceHint.textContent = "";
@@ -539,7 +549,7 @@
       setSource("dropbox");
       const rawLines = els.dropboxLinks.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
       if (!rawLines.length) {
-        setListedFiles([], "Paste a Dropbox files.json manifest URL or direct CSV/LOG links first.");
+        setListedFiles([], "Paste a Dropbox shared CSV/LOG link first.");
         return;
       }
 
@@ -1022,6 +1032,10 @@
       await listDropboxFiles(true);
     });
 
+    els.dropboxLinks.addEventListener("paste", scheduleDropboxLoad);
+    els.dropboxLinks.addEventListener("change", scheduleDropboxLoad);
+    els.dropboxLinks.addEventListener("input", scheduleDropboxLoad);
+
     els.fileInput.addEventListener("change", async () => {
       const files = Array.from(els.fileInput.files || []).filter((file) => isDatasetName(file.name));
       setListedFiles(files.map((file) => ({
@@ -1052,7 +1066,10 @@
         state.records = [];
         updateInfo();
         draw();
-        els.status.textContent = `[ERROR] parse failed: ${err.message}`;
+        const sourceNote = item.source === "dropbox"
+          ? " Dropbox can block browser reads for some shared links; download the file and use Local file if this persists."
+          : "";
+        els.status.textContent = `[ERROR] parse failed: ${item.name}: ${err.message}.${sourceNote}`;
       }
     }
 
