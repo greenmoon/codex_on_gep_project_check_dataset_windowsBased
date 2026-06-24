@@ -2,9 +2,15 @@
 
 Static browser version of `jb_A1886_GUItool_check_GEP_dataset_v07.py`.
 
+Current browser title: `A1886 GEP Dataset Checker V01 2026.06.24`.
+
 ## Use Locally
 
-Open `index.html` in a browser, then upload a `.log`, `.txt`, `.jsonl`, or `.csv` dataset file.
+Open `index.html` in a browser, then choose one source:
+
+- `1 Local file`: select one or more `.csv` / `.log` files from this PC, pick one from the list, then click `Show Curve`
+- `2 Repo file`: list committed dataset files from `files.json`, pick one, then click `Show Curve`
+- `3 Dropbox link`: paste a Dropbox `files.json` manifest link or one direct shared CSV/LOG link per line, list files, pick one, then click `Show Curve`
 
 The page supports:
 

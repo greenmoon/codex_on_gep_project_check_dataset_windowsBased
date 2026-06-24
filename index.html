@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker</title>
+  <title>A1886 GEP Dataset Checker V01 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -177,6 +177,32 @@
       width: 100%;
     }
 
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .source-grid button.active {
+      border-color: var(--focus);
+      background: var(--focus);
+      color: #fff;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    .hidden {
+      display: none;
+    }
+
     .meta {
       display: grid;
       gap: 6px;
@@ -275,7 +301,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker</h1>
+    <h1>A1886 GEP Dataset Checker V01 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -289,20 +315,30 @@
         </div>
       </div>
 
+      <div class="control">
+        <div class="label">Dataset Source</div>
+        <div class="source-grid" role="group" aria-label="Dataset source">
+          <button id="sourceLocal" type="button">1 Local file</button>
+          <button id="sourceRepo" type="button">2 Repo file</button>
+          <button id="sourceDropbox" type="button">3 Dropbox link</button>
+        </div>
+      </div>
+
       <div class="file-drop">
-        <label for="fileInput">Open dataset file</label>
-        <input id="fileInput" type="file" accept=".log,.txt,.json,.jsonl,.csv">
+        <label id="sourceHint" for="fileInput">Click Local file, Repo file, or Dropbox link.</label>
+        <input id="fileInput" class="hidden" type="file" accept=".log,.txt,.json,.jsonl,.csv" multiple>
+        <div id="dropboxPanel" class="hidden">
+          <textarea id="dropboxLinks" placeholder="Paste a Dropbox shared manifest URL, or one CSV/LOG Dropbox link per line."></textarea>
+          <button id="loadDropboxLinks" type="button">List Dropbox files</button>
+        </div>
       </div>
 
       <div class="control">
-        <label for="sampleSelect">Included files</label>
-        <select id="sampleSelect">
-          <option value="">Select local sample</option>
-          <option value="screen to head 30cm.csv" data-format="CSV">screen to head 30cm.csv</option>
-          <option value="to people80cm.csv" data-format="CSV">to people80cm.csv</option>
-          <option value="sensor_moving_after2h.log" data-format="LOG">sensor_moving_after2h.log</option>
-          <option value="sensor_static_1.5h.log" data-format="LOG">sensor_static_1.5h.log</option>
+        <label for="fileSelect">CSV / LOG files</label>
+        <select id="fileSelect">
+          <option value="">No files listed</option>
         </select>
+        <button id="openSelectedFile" type="button">Show Curve</button>
       </div>
 
       <div class="checks">
@@ -378,14 +414,24 @@
       selectedFn: null,
       selectedRatio: 0.5,
       current: { records: [], fns: [], r0s: [], deg: [] },
-      parseInfo: {}
+      parseInfo: {},
+      source: "",
+      listedFiles: []
     };
 
     const els = {
       fmtLog: document.getElementById("fmtLog"),
       fmtCsv: document.getElementById("fmtCsv"),
+      sourceLocal: document.getElementById("sourceLocal"),
+      sourceRepo: document.getElementById("sourceRepo"),
+      sourceDropbox: document.getElementById("sourceDropbox"),
+      sourceHint: document.getElementById("sourceHint"),
       fileInput: document.getElementById("fileInput"),
-      sampleSelect: document.getElementById("sampleSelect"),
+      dropboxPanel: document.getElementById("dropboxPanel"),
+      dropboxLinks: document.getElementById("dropboxLinks"),
+      loadDropboxLinks: document.getElementById("loadDropboxLinks"),
+      fileSelect: document.getElementById("fileSelect"),
+      openSelectedFile: document.getElementById("openSelectedFile"),
       infoBox: document.getElementById("infoBox"),
       status: document.getElementById("status"),
       canvas: document.getElementById("chart"),
@@ -407,6 +453,117 @@
       state.format = format;
       els.fmtLog.classList.toggle("active", format === "LOG");
       els.fmtCsv.classList.toggle("active", format === "CSV");
+    }
+
+    function setSource(source) {
+      state.source = source;
+      els.sourceLocal.classList.toggle("active", source === "local");
+      els.sourceRepo.classList.toggle("active", source === "repo");
+      els.sourceDropbox.classList.toggle("active", source === "dropbox");
+      els.fileInput.classList.toggle("hidden", source !== "local");
+      els.dropboxPanel.classList.toggle("hidden", source !== "dropbox");
+    }
+
+    function extFormat(name) {
+      return String(name).toLowerCase().endsWith(".csv") ? "CSV" : "LOG";
+    }
+
+    function isDatasetName(name) {
+      return /\.(csv|log|txt|json|jsonl)$/i.test(String(name || ""));
+    }
+
+    function setListedFiles(files, hint) {
+      state.listedFiles = files.filter((item) => isDatasetName(item.name || item.path || item.url));
+      els.fileSelect.innerHTML = "";
+      if (!state.listedFiles.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "No CSV / LOG files found";
+        els.fileSelect.appendChild(opt);
+      } else {
+        state.listedFiles.forEach((item, index) => {
+          const opt = document.createElement("option");
+          opt.value = String(index);
+          opt.textContent = `${item.name} (${item.format || extFormat(item.name)})`;
+          els.fileSelect.appendChild(opt);
+        });
+      }
+      els.sourceHint.textContent = hint || `${state.listedFiles.length} files listed. Select one and click Show Curve.`;
+    }
+
+    function dropboxRawUrl(url) {
+      const trimmed = String(url || "").trim();
+      if (!trimmed) return "";
+      try {
+        const u = new URL(trimmed);
+        if (u.hostname.includes("dropbox.com")) {
+          u.searchParams.set("dl", "1");
+          u.searchParams.delete("raw");
+          return u.toString();
+        }
+      } catch (_err) {
+        return trimmed;
+      }
+      return trimmed;
+    }
+
+    async function fetchRepoFiles() {
+      setSource("repo");
+      els.sourceHint.textContent = "Loading repo file list...";
+      try {
+        const response = await fetch("files.json", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const files = (data.files || []).map((item) => ({
+          name: item.name,
+          url: item.path || item.url || item.name,
+          format: item.format || extFormat(item.name),
+          source: "repo"
+        }));
+        setListedFiles(files, `${files.length} repo files listed. Select one and click Show Curve.`);
+      } catch (err) {
+        setListedFiles([], `Could not load repo manifest files.json: ${err.message}`);
+      }
+    }
+
+    async function listDropboxFiles() {
+      setSource("dropbox");
+      const rawLines = els.dropboxLinks.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+      if (!rawLines.length) {
+        setListedFiles([], "Paste a Dropbox files.json manifest URL or direct CSV/LOG links first.");
+        return;
+      }
+
+      if (rawLines.length === 1 && /files\.json(\?|$)/i.test(rawLines[0])) {
+        try {
+          const response = await fetch(dropboxRawUrl(rawLines[0]), { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          const files = (data.files || []).map((item) => ({
+            name: item.name || item.path || item.url,
+            url: dropboxRawUrl(item.url || item.path || item.name),
+            format: item.format || extFormat(item.name || item.path || item.url),
+            source: "dropbox"
+          }));
+          setListedFiles(files, `${files.length} Dropbox manifest files listed. Select one and click Show Curve.`);
+          return;
+        } catch (err) {
+          setListedFiles([], `Could not load Dropbox manifest: ${err.message}`);
+          return;
+        }
+      }
+
+      const files = rawLines.map((url) => {
+        const clean = dropboxRawUrl(url);
+        let name = clean.split("?")[0].split("/").filter(Boolean).pop() || clean;
+        try {
+          name = decodeURIComponent(name);
+        } catch (_err) {
+          // Keep the URL tail as-is if decoding fails.
+        }
+        return { name, url: clean, format: extFormat(name), source: "dropbox" };
+      });
+      setListedFiles(files, `${files.length} Dropbox links listed. Select one and click Show Curve.`);
     }
 
     function parseLog(text) {
@@ -835,29 +992,51 @@
     els.fmtLog.addEventListener("click", () => setFormat("LOG"));
     els.fmtCsv.addEventListener("click", () => setFormat("CSV"));
 
+    els.sourceLocal.addEventListener("click", () => {
+      setSource("local");
+      els.sourceHint.textContent = "Choose one or more CSV / LOG files from this PC.";
+      els.fileInput.click();
+    });
+
+    els.sourceRepo.addEventListener("click", fetchRepoFiles);
+
+    els.sourceDropbox.addEventListener("click", () => {
+      setSource("dropbox");
+      els.sourceHint.textContent = "Paste Dropbox shared links, then click List Dropbox files.";
+    });
+
+    els.loadDropboxLinks.addEventListener("click", listDropboxFiles);
+
     els.fileInput.addEventListener("change", async () => {
-      const file = els.fileInput.files[0];
-      if (!file) return;
-      const guessed = file.name.toLowerCase().endsWith(".csv") ? "CSV" : state.format;
+      const files = Array.from(els.fileInput.files || []).filter((file) => isDatasetName(file.name));
+      setListedFiles(files.map((file) => ({
+        name: file.name,
+        file,
+        format: extFormat(file.name),
+        source: "local"
+      })), `${files.length} local files listed. Select one and click Show Curve.`);
+    });
+
+    els.openSelectedFile.addEventListener("click", async () => {
+      const index = Number.parseInt(els.fileSelect.value, 10);
+      const item = state.listedFiles[index];
+      if (!item) {
+        els.status.textContent = "No file selected.";
+        return;
+      }
       try {
-        loadText(await file.text(), file.name, guessed);
+        if (item.file) {
+          loadText(await item.file.text(), item.name, item.format || extFormat(item.name));
+        } else {
+          const response = await fetch(item.url, { cache: "no-store" });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          loadText(await response.text(), item.name, item.format || extFormat(item.name));
+        }
       } catch (err) {
         state.records = [];
         updateInfo();
         draw();
         els.status.textContent = `[ERROR] parse failed: ${err.message}`;
-      }
-    });
-
-    els.sampleSelect.addEventListener("change", async () => {
-      const option = els.sampleSelect.selectedOptions[0];
-      if (!option || !option.value) return;
-      try {
-        const response = await fetch(option.value);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        loadText(await response.text(), option.value, option.dataset.format);
-      } catch (err) {
-        els.status.textContent = `Could not load sample file. If opened by file://, use the upload control instead. Details: ${err.message}`;
       }
     });
 
@@ -899,6 +1078,7 @@
 
     window.addEventListener("resize", draw);
     setFormat("LOG");
+    setSource("");
     draw();
   </script>
 </body>

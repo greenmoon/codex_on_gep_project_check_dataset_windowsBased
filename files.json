@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "name": "screen to head 30cm.csv",
+      "path": "screen to head 30cm.csv",
+      "format": "CSV"
+    },
+    {
+      "name": "to people80cm.csv",
+      "path": "to people80cm.csv",
+      "format": "CSV"
+    },
+    {
+      "name": "sensor_moving_after2h.log",
+      "path": "sensor_moving_after2h.log",
+      "format": "LOG"
+    },
+    {
+      "name": "sensor_static_1.5h.log",
+      "path": "sensor_static_1.5h.log",
+      "format": "LOG"
+    }
+  ]
+}
