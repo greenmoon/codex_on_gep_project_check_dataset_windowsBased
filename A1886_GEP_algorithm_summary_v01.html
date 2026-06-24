@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A1886 GEP Algorithm Summary v01</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #667085;
+      --line: #d7dde5;
+      --blue: #1f64d1;
+      --red: #cf2e2e;
+      --green: #16803c;
+      --code: #f2f4f7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 28px 18px 44px;
+    }
+
+    article {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    h2 {
+      margin: 28px 0 8px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: 20px;
+    }
+
+    .date {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .callout {
+      padding: 12px 14px;
+      background: #f9fafb;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    code {
+      padding: 1px 4px;
+      border-radius: 4px;
+      background: var(--code);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.94em;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 14px;
+      border-radius: 8px;
+      background: #101828;
+      color: #f9fafb;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+    }
+
+    ul,
+    ol {
+      padding-left: 24px;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(110px, 1fr));
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .flow span {
+      display: grid;
+      min-height: 48px;
+      place-items: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .blue {
+      color: var(--blue);
+    }
+
+    .red {
+      color: var(--red);
+    }
+
+    .green {
+      color: var(--green);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+
+    th {
+      background: #f9fafb;
+    }
+
+    @media (max-width: 760px) {
+      article {
+        padding: 20px;
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article>
+      <h1>A1886 GEP Dataset Checker Algorithm Summary v01</h1>
+      <p class="date">Date: 2026.06.24</p>
+
+      <p class="callout">
+        This note summarizes the red-line processing used in the browser viewer:
+        the deglitch function and optional rule01 range-threshold function.
+        The <span class="blue">blue line</span> is raw <code>r0</code>.
+        The <span class="red">red line</span> is the processed range.
+        <span class="green">Green dots</span> show points changed by rule01.
+      </p>
+
+      <h2>1. Deglitch Function</h2>
+      <p><strong>Purpose:</strong> remove short abnormal spikes while preserving normal range movement.</p>
+
+      <p><strong>Inputs:</strong></p>
+      <ul>
+        <li><code>r0[k]</code>: raw range value at frame <code>k</code></li>
+        <li><code>median_win</code>: local median window size, default <code>9</code></li>
+        <li><code>spike_TH</code>: spike threshold, default <code>0.065 m</code></li>
+        <li><code>jump_TH</code>: jump threshold, default <code>0.253 m</code></li>
+      </ul>
+
+      <p><strong>For each frame:</strong></p>
+      <ol>
+        <li>Build a local window around <code>r0[k]</code>.</li>
+        <li>Compute the local median value.</li>
+        <li>Compare the current raw value with the local median.</li>
+        <li>Compare the current raw value with the previous accepted value.</li>
+      </ol>
+
+      <pre><code>prev_valid = r0[0]
+
+for each k:
+    x = r0[k]
+    med = median(local window around k)
+
+    spike_flag = abs(x - med) &gt; spike_TH
+
+    jump_flag =
+        abs(x - prev_valid) &gt; jump_TH
+        and abs(med - prev_valid) &lt;= spike_TH
+
+    if spike_flag or jump_flag:
+        y = med
+    else:
+        y = x
+
+    red_base[k] = y
+    prev_valid = y</code></pre>
+
+      <p><strong>Brief explanation:</strong></p>
+      <ul>
+        <li><code>spike_flag</code> catches one-point or short noisy spikes far from the local trend.</li>
+        <li><code>jump_flag</code> catches sudden jumps away from the previous trusted value when the local median still agrees with the previous trusted value.</li>
+        <li>The replacement value is the local median, so the red curve follows the nearby stable trend instead of the spike.</li>
+      </ul>
+
+      <h2>2. Optional Rule01 Function</h2>
+      <p><strong>Purpose:</strong> block processed values that jump into an untrusted high-range region.</p>
+
+      <p><strong>Inputs:</strong></p>
+      <ul>
+        <li><code>red_base[k]</code>: result from the deglitch function</li>
+        <li><code>rule_base_range_TH</code>: untrusted range threshold, default <code>1.1 m</code></li>
+        <li><code>Enable rule01</code>: checkbox that turns this rule on or off</li>
+      </ul>
+
+      <p><strong>Rule:</strong></p>
+      <pre><code>old_r0 = r0{k}
+new_r0 = r0{k+1}
+
+if new_r0 &gt;= rule_base_range_TH:
+    r0{k+1} = r0{k}</code></pre>
+
+      <p><strong>Viewer behavior:</strong></p>
+      <ul>
+        <li>Rule01 is applied after the deglitch function.</li>
+        <li>The final red curve uses the rule01-corrected values.</li>
+        <li>Any point changed by rule01 is marked with a <span class="green">green dot</span>.</li>
+      </ul>
+
+      <pre><code>red_final = copy(red_base)
+
+if Enable rule01:
+    for each k from 0 to N-2:
+        old_r0 = red_final[k]
+        new_r0 = red_final[k + 1]
+
+        if new_r0 &gt;= rule_base_range_TH:
+            red_final[k + 1] = old_r0
+            mark point k + 1 as rule01 affected</code></pre>
+
+      <p><strong>Brief explanation:</strong></p>
+      <ul>
+        <li>If the next processed value is greater than or equal to <code>rule_base_range_TH</code>, it is treated as untrusted.</li>
+        <li>The viewer keeps the previous processed value instead of accepting the high value.</li>
+        <li>Green dots show where this rule changed the red curve.</li>
+      </ul>
+
+      <h2>Processing Order</h2>
+      <div class="flow">
+        <span>raw r0</span>
+        <span>deglitch</span>
+        <span>red_base</span>
+        <span>optional rule01</span>
+        <span>final red curve</span>
+      </div>
+
+      <h2>Current Defaults</h2>
+      <table>
+        <tr><th>Parameter</th><th>Default</th></tr>
+        <tr><td><code>median_win</code></td><td><code>9</code></td></tr>
+        <tr><td><code>spike_TH</code></td><td><code>0.065 m</code></td></tr>
+        <tr><td><code>jump_TH</code></td><td><code>0.253 m</code></td></tr>
+        <tr><td><code>rule_base_range_TH</code></td><td><code>1.1 m</code></td></tr>
+        <tr><td><code>rule01</code></td><td>off by default</td></tr>
+      </table>
+    </article>
+  </main>
+</body>
+</html>
