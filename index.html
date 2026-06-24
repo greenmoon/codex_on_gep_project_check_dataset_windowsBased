@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V02 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V03 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -301,7 +301,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V02 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V03 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -310,8 +310,8 @@
       <div class="control">
         <div class="label">Input Format</div>
         <div class="segmented" role="group" aria-label="Input format">
-          <button id="fmtLog" class="active" type="button">LOG</button>
-          <button id="fmtCsv" type="button">CSV</button>
+          <button id="fmtLog" type="button">LOG</button>
+          <button id="fmtCsv" class="active" type="button">CSV</button>
         </div>
       </div>
 
@@ -325,7 +325,7 @@
       </div>
 
       <div class="file-drop">
-        <label id="sourceHint" for="fileInput">Click Local file, GitHub file, or Dropbox link.</label>
+        <label id="sourceHint" class="hidden" for="fileInput"></label>
         <input id="fileInput" class="hidden" type="file" accept=".log,.txt,.json,.jsonl,.csv" multiple>
         <div id="dropboxPanel" class="hidden">
           <textarea id="dropboxLinks" placeholder="Paste a Dropbox shared manifest URL, or one CSV/LOG Dropbox link per line."></textarea>
@@ -334,7 +334,6 @@
       </div>
 
       <div class="control">
-        <label for="fileSelect">CSV / LOG files</label>
         <select id="fileSelect">
           <option value="">No files listed</option>
         </select>
@@ -476,7 +475,7 @@
       if (!state.listedFiles.length) {
         const opt = document.createElement("option");
         opt.value = "";
-        opt.textContent = "No CSV / LOG files found";
+        opt.textContent = "No files found";
         els.fileSelect.appendChild(opt);
       } else {
         state.listedFiles.forEach((item, index) => {
@@ -486,7 +485,7 @@
           els.fileSelect.appendChild(opt);
         });
       }
-      els.sourceHint.textContent = hint || `${state.listedFiles.length} files listed. Select one to show curve.`;
+      els.sourceHint.textContent = hint || "";
     }
 
     function dropboxRawUrl(url) {
@@ -507,7 +506,7 @@
 
     async function fetchRepoFiles() {
       setSource("repo");
-      els.sourceHint.textContent = "Loading repo file list...";
+      els.sourceHint.textContent = "";
       try {
         const response = await fetch("files.json", { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -518,7 +517,7 @@
           format: item.format || extFormat(item.name),
           source: "repo"
         }));
-        setListedFiles(files, `${files.length} GitHub files listed. Select one to show curve.`);
+        setListedFiles(files, "");
       } catch (err) {
         setListedFiles([], `Could not load repo manifest files.json: ${err.message}`);
       }
@@ -992,7 +991,7 @@
 
     els.sourceLocal.addEventListener("click", () => {
       setSource("local");
-      els.sourceHint.textContent = "Choose one or more CSV / LOG files from this PC.";
+      els.sourceHint.textContent = "Choose one or more files from this PC.";
       els.fileInput.click();
     });
 
@@ -1078,9 +1077,8 @@
     }, { passive: false });
 
     window.addEventListener("resize", draw);
-    setFormat("LOG");
-    setSource("");
-    draw();
+    setFormat("CSV");
+    fetchRepoFiles().then(() => draw());
   </script>
 </body>
 </html>
