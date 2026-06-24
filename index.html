@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V03 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V04 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -301,7 +301,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V03 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V04 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -400,6 +400,7 @@
       frameMs: 50.0,
       zoomIn: 0.8,
       zoomOut: 1.25,
+      githubDefaultName: "to people80cm.csv",
       dropboxUrl: "https://www.dropbox.com/scl/fi/cvdagxn4nofgftcvhkgpc/to-people80cm.csv?rlkey=xf3w3yy7cpfbc4l2uemhri0vt&dl=0"
     };
 
@@ -487,6 +488,16 @@
       els.sourceHint.textContent = hint || "";
     }
 
+    function selectListedFileByName(name) {
+      const target = String(name || "").trim().toLowerCase();
+      const index = state.listedFiles.findIndex((item) => String(item.name || "").trim().toLowerCase() === target);
+      if (index >= 0) {
+        els.fileSelect.value = String(index);
+        return true;
+      }
+      return false;
+    }
+
     function dropboxRawUrl(url) {
       const trimmed = String(url || "").trim();
       if (!trimmed) return "";
@@ -503,7 +514,7 @@
       return trimmed;
     }
 
-    async function fetchRepoFiles() {
+    async function fetchRepoFiles(autoOpen = false) {
       setSource("repo");
       els.sourceHint.textContent = "";
       try {
@@ -517,6 +528,8 @@
           source: "repo"
         }));
         setListedFiles(files, "");
+        selectListedFileByName(DEFAULTS.githubDefaultName);
+        if (autoOpen && state.listedFiles.length) await openSelectedFile();
       } catch (err) {
         setListedFiles([], `Could not load repo manifest files.json: ${err.message}`);
       }
@@ -552,7 +565,9 @@
 
       const files = rawLines.map((url) => {
         const clean = dropboxRawUrl(url);
-        let name = clean.split("?")[0].split("/").filter(Boolean).pop() || clean;
+        let name = clean === dropboxRawUrl(DEFAULTS.dropboxUrl)
+          ? "to-people80cm.csv"
+          : clean.split("?")[0].split("/").filter(Boolean).pop() || clean;
         try {
           name = decodeURIComponent(name);
         } catch (_err) {
@@ -996,7 +1011,7 @@
       els.fileInput.click();
     });
 
-    els.sourceRepo.addEventListener("click", fetchRepoFiles);
+    els.sourceRepo.addEventListener("click", () => fetchRepoFiles(true));
 
     els.sourceDropbox.addEventListener("click", async () => {
       setSource("dropbox");
@@ -1081,7 +1096,7 @@
 
     window.addEventListener("resize", draw);
     setFormat("CSV");
-    fetchRepoFiles().then(() => draw());
+    fetchRepoFiles(true).then(() => draw());
   </script>
 </body>
 </html>
