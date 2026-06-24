@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V07 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V08 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -314,7 +314,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V07 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V08 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -375,11 +375,11 @@
         </div>
         <div class="control">
           <label for="medianWin">Median win</label>
-          <input id="medianWin" type="number" min="3" max="31" step="2" value="5">
+          <input id="medianWin" type="number" min="3" max="31" step="2" value="9">
         </div>
         <div class="control">
           <label for="spikeTh">Spike TH m</label>
-          <input id="spikeTh" type="number" min="0.01" max="1" step="0.001" value="0.130">
+          <input id="spikeTh" type="number" min="0.01" max="1" step="0.001" value="0.065">
         </div>
         <div class="control">
           <label for="jumpTh">Jump TH m</label>
@@ -407,8 +407,8 @@
 
   <script>
     const DEFAULTS = {
-      medianWin: 5,
-      spikeTh: 0.130,
+      medianWin: 9,
+      spikeTh: 0.065,
       jumpTh: 0.253,
       frameMs: 50.0,
       zoomIn: 0.8,
