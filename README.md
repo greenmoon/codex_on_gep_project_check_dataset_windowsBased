@@ -10,7 +10,7 @@ Open `index.html` in a browser, then choose one source:
 
 - `1 Local file`: select one or more `.csv` / `.log` files from this PC, then pick one from the list to show the curve
 - `2 GitHub file`: list committed dataset files from `files.json`, then pick one from the list to show the curve
-- `3 Dropbox link`: paste a Dropbox `files.json` manifest link or one direct shared CSV/LOG link per line, list files, then pick one from the list to show the curve
+- `3 Dropbox link`: loads the default Dropbox CSV link, or uses a pasted Dropbox manifest/direct CSV/LOG link and shows the selected curve
 
 The page supports:
 

@@ -328,8 +328,7 @@
         <label id="sourceHint" class="hidden" for="fileInput"></label>
         <input id="fileInput" class="hidden" type="file" accept=".log,.txt,.json,.jsonl,.csv" multiple>
         <div id="dropboxPanel" class="hidden">
-          <textarea id="dropboxLinks" placeholder="Paste a Dropbox shared manifest URL, or one CSV/LOG Dropbox link per line."></textarea>
-          <button id="loadDropboxLinks" type="button">List Dropbox files</button>
+          <textarea id="dropboxLinks" placeholder="Dropbox shared CSV/LOG link"></textarea>
         </div>
       </div>
 
@@ -400,7 +399,8 @@
       jumpTh: 0.253,
       frameMs: 50.0,
       zoomIn: 0.8,
-      zoomOut: 1.25
+      zoomOut: 1.25,
+      dropboxUrl: "https://www.dropbox.com/scl/fi/cvdagxn4nofgftcvhkgpc/to-people80cm.csv?rlkey=xf3w3yy7cpfbc4l2uemhri0vt&dl=0"
     };
 
     const state = {
@@ -427,7 +427,6 @@
       fileInput: document.getElementById("fileInput"),
       dropboxPanel: document.getElementById("dropboxPanel"),
       dropboxLinks: document.getElementById("dropboxLinks"),
-      loadDropboxLinks: document.getElementById("loadDropboxLinks"),
       fileSelect: document.getElementById("fileSelect"),
       infoBox: document.getElementById("infoBox"),
       status: document.getElementById("status"),
@@ -523,7 +522,7 @@
       }
     }
 
-    async function listDropboxFiles() {
+    async function listDropboxFiles(autoOpen = false) {
       setSource("dropbox");
       const rawLines = els.dropboxLinks.value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
       if (!rawLines.length) {
@@ -543,6 +542,7 @@
             source: "dropbox"
           }));
           setListedFiles(files, `${files.length} Dropbox manifest files listed. Select one to show curve.`);
+          if (autoOpen && files.length) await openSelectedFile();
           return;
         } catch (err) {
           setListedFiles([], `Could not load Dropbox manifest: ${err.message}`);
@@ -561,6 +561,7 @@
         return { name, url: clean, format: extFormat(name), source: "dropbox" };
       });
       setListedFiles(files, `${files.length} Dropbox links listed. Select one to show curve.`);
+      if (autoOpen && files.length) await openSelectedFile();
     }
 
     function parseLog(text) {
@@ -997,12 +998,14 @@
 
     els.sourceRepo.addEventListener("click", fetchRepoFiles);
 
-    els.sourceDropbox.addEventListener("click", () => {
+    els.sourceDropbox.addEventListener("click", async () => {
       setSource("dropbox");
-      els.sourceHint.textContent = "Paste Dropbox shared links, then click List Dropbox files.";
+      if (!els.dropboxLinks.value.trim()) {
+        els.dropboxLinks.value = DEFAULTS.dropboxUrl;
+      }
+      els.sourceHint.textContent = "";
+      await listDropboxFiles(true);
     });
-
-    els.loadDropboxLinks.addEventListener("click", listDropboxFiles);
 
     els.fileInput.addEventListener("change", async () => {
       const files = Array.from(els.fileInput.files || []).filter((file) => isDatasetName(file.name));
