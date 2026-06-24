@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V01 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V02 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -301,7 +301,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V01 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V02 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -319,13 +319,13 @@
         <div class="label">Dataset Source</div>
         <div class="source-grid" role="group" aria-label="Dataset source">
           <button id="sourceLocal" type="button">1 Local file</button>
-          <button id="sourceRepo" type="button">2 Repo file</button>
+          <button id="sourceRepo" type="button">2 GitHub file</button>
           <button id="sourceDropbox" type="button">3 Dropbox link</button>
         </div>
       </div>
 
       <div class="file-drop">
-        <label id="sourceHint" for="fileInput">Click Local file, Repo file, or Dropbox link.</label>
+        <label id="sourceHint" for="fileInput">Click Local file, GitHub file, or Dropbox link.</label>
         <input id="fileInput" class="hidden" type="file" accept=".log,.txt,.json,.jsonl,.csv" multiple>
         <div id="dropboxPanel" class="hidden">
           <textarea id="dropboxLinks" placeholder="Paste a Dropbox shared manifest URL, or one CSV/LOG Dropbox link per line."></textarea>
@@ -338,7 +338,6 @@
         <select id="fileSelect">
           <option value="">No files listed</option>
         </select>
-        <button id="openSelectedFile" type="button">Show Curve</button>
       </div>
 
       <div class="checks">
@@ -431,7 +430,6 @@
       dropboxLinks: document.getElementById("dropboxLinks"),
       loadDropboxLinks: document.getElementById("loadDropboxLinks"),
       fileSelect: document.getElementById("fileSelect"),
-      openSelectedFile: document.getElementById("openSelectedFile"),
       infoBox: document.getElementById("infoBox"),
       status: document.getElementById("status"),
       canvas: document.getElementById("chart"),
@@ -488,7 +486,7 @@
           els.fileSelect.appendChild(opt);
         });
       }
-      els.sourceHint.textContent = hint || `${state.listedFiles.length} files listed. Select one and click Show Curve.`;
+      els.sourceHint.textContent = hint || `${state.listedFiles.length} files listed. Select one to show curve.`;
     }
 
     function dropboxRawUrl(url) {
@@ -520,7 +518,7 @@
           format: item.format || extFormat(item.name),
           source: "repo"
         }));
-        setListedFiles(files, `${files.length} repo files listed. Select one and click Show Curve.`);
+        setListedFiles(files, `${files.length} GitHub files listed. Select one to show curve.`);
       } catch (err) {
         setListedFiles([], `Could not load repo manifest files.json: ${err.message}`);
       }
@@ -545,7 +543,7 @@
             format: item.format || extFormat(item.name || item.path || item.url),
             source: "dropbox"
           }));
-          setListedFiles(files, `${files.length} Dropbox manifest files listed. Select one and click Show Curve.`);
+          setListedFiles(files, `${files.length} Dropbox manifest files listed. Select one to show curve.`);
           return;
         } catch (err) {
           setListedFiles([], `Could not load Dropbox manifest: ${err.message}`);
@@ -563,7 +561,7 @@
         }
         return { name, url: clean, format: extFormat(name), source: "dropbox" };
       });
-      setListedFiles(files, `${files.length} Dropbox links listed. Select one and click Show Curve.`);
+      setListedFiles(files, `${files.length} Dropbox links listed. Select one to show curve.`);
     }
 
     function parseLog(text) {
@@ -1014,10 +1012,11 @@
         file,
         format: extFormat(file.name),
         source: "local"
-      })), `${files.length} local files listed. Select one and click Show Curve.`);
+      })), `${files.length} local files listed. Select one to show curve.`);
+      if (files.length) await openSelectedFile();
     });
 
-    els.openSelectedFile.addEventListener("click", async () => {
+    async function openSelectedFile() {
       const index = Number.parseInt(els.fileSelect.value, 10);
       const item = state.listedFiles[index];
       if (!item) {
@@ -1038,7 +1037,9 @@
         draw();
         els.status.textContent = `[ERROR] parse failed: ${err.message}`;
       }
-    });
+    }
+
+    els.fileSelect.addEventListener("change", openSelectedFile);
 
     for (const el of [els.windowSize, els.startFn, els.frameMs, els.medianWin, els.spikeTh, els.jumpTh, els.showR1, els.showR2]) {
       el.addEventListener("input", draw);
