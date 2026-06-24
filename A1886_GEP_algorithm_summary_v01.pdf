@@ -1,0 +1,319 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+2 0 obj
+<< /Length 1543 >>
+stream
+BT
+/F1 10 Tf
+50 785 Td
+14 TL
+() Tj
+T*
+(A1886 GEP DATASET CHECKER ALGORITHM SUMMARY V01) Tj
+T*
+() Tj
+T*
+(Date: 2026.06.24) Tj
+T*
+() Tj
+T*
+(This note summarizes the red-line processing used in the browser viewer:) Tj
+T*
+() Tj
+T*
+(  1. Deglitch function) Tj
+T*
+(  2. Optional rule01 range-threshold function) Tj
+T*
+() Tj
+T*
+(The blue line is the raw r0 data. The red line is the displayed processed range after) Tj
+T*
+(deglitching and, when enabled, rule01.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(1. Deglitch Function) Tj
+T*
+() Tj
+T*
+(Purpose: remove short abnormal spikes while preserving normal range movement.) Tj
+T*
+() Tj
+T*
+(Inputs:) Tj
+T*
+() Tj
+T*
+(  - r0[k]: raw range value at frame k) Tj
+T*
+(  - median_win: local median window size, default 9) Tj
+T*
+(  - spike_TH: spike threshold in meters, default 0.065 m) Tj
+T*
+(  - jump_TH: jump threshold in meters, default 0.253 m) Tj
+T*
+() Tj
+T*
+(For each frame k:) Tj
+T*
+() Tj
+T*
+(  1. Build a local window around r0[k].) Tj
+T*
+(  2. Compute the local median value.) Tj
+T*
+(  3. Compare the current raw value with the local median.) Tj
+T*
+(  4. Compare the current raw value with the previous accepted value.) Tj
+T*
+() Tj
+T*
+(Pseudocode:) Tj
+T*
+() Tj
+T*
+(prev_valid = r0[0]) Tj
+T*
+() Tj
+T*
+(for each k:) Tj
+T*
+(    x = r0[k]) Tj
+T*
+(    med = median\(local window around k\)) Tj
+T*
+() Tj
+T*
+(    spike_flag = abs\(x - med\) > spike_TH) Tj
+T*
+() Tj
+T*
+(    jump_flag =) Tj
+T*
+(        abs\(x - prev_valid\) > jump_TH) Tj
+T*
+(        and abs\(med - prev_valid\) <= spike_TH) Tj
+T*
+() Tj
+T*
+(Page 1 of 3) Tj
+ET
+endstream
+endobj
+3 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 2 0 R >>
+endobj
+4 0 obj
+<< /Length 1531 >>
+stream
+BT
+/F1 10 Tf
+50 785 Td
+14 TL
+(    if spike_flag or jump_flag:) Tj
+T*
+(        y = med) Tj
+T*
+(    else:) Tj
+T*
+(        y = x) Tj
+T*
+() Tj
+T*
+(    red_base[k] = y) Tj
+T*
+(    prev_valid = y) Tj
+T*
+() Tj
+T*
+(Brief explanation:) Tj
+T*
+() Tj
+T*
+(  - spike_flag catches one-point or short noisy spikes far from the local trend.) Tj
+T*
+(  - jump_flag catches sudden jumps away from the previous trusted value when the local) Tj
+T*
+(  median still agrees with the previous trusted value.) Tj
+T*
+(  - The replacement value is the local median, so the red curve follows the nearby) Tj
+T*
+(  stable trend instead of the spike.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(2. Optional Rule01 Function) Tj
+T*
+() Tj
+T*
+(Purpose: block processed values that jump into an untrusted high-range region.) Tj
+T*
+() Tj
+T*
+(Inputs:) Tj
+T*
+() Tj
+T*
+(  - red_base[k]: result from the deglitch function) Tj
+T*
+(  - rule_base_range_TH: untrusted range threshold, default 1.1 m) Tj
+T*
+(  - Enable rule01: checkbox that turns this rule on or off) Tj
+T*
+() Tj
+T*
+(Rule:) Tj
+T*
+() Tj
+T*
+(old_r0 = r0{k}) Tj
+T*
+(new_r0 = r0{k+1}) Tj
+T*
+() Tj
+T*
+(if new_r0 >= rule_base_range_TH:) Tj
+T*
+(    r0{k+1} = r0{k}) Tj
+T*
+() Tj
+T*
+(Viewer behavior:) Tj
+T*
+() Tj
+T*
+(  - Rule01 is applied after the deglitch function.) Tj
+T*
+(  - The final red curve uses the rule01-corrected values.) Tj
+T*
+(  - Any point changed by rule01 is marked with a green dot.) Tj
+T*
+() Tj
+T*
+(Pseudocode:) Tj
+T*
+() Tj
+T*
+(red_final = copy\(red_base\)) Tj
+T*
+() Tj
+T*
+(if Enable rule01:) Tj
+T*
+(Page 2 of 3) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 1087 >>
+stream
+BT
+/F1 10 Tf
+50 785 Td
+14 TL
+(    for each k from 0 to N-2:) Tj
+T*
+(        old_r0 = red_final[k]) Tj
+T*
+(        new_r0 = red_final[k + 1]) Tj
+T*
+() Tj
+T*
+(        if new_r0 >= rule_base_range_TH:) Tj
+T*
+(            red_final[k + 1] = old_r0) Tj
+T*
+(            mark point k + 1 as rule01 affected) Tj
+T*
+() Tj
+T*
+(Brief explanation:) Tj
+T*
+() Tj
+T*
+(  - If the next processed value is greater than or equal to rule_base_range_TH, it is) Tj
+T*
+(  treated as untrusted.) Tj
+T*
+(  - The viewer keeps the previous processed value instead of accepting the high value.) Tj
+T*
+(  - Green dots show where this rule changed the red curve.) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Processing Order) Tj
+T*
+() Tj
+T*
+(raw r0) Tj
+T*
+(  -> deglitch function) Tj
+T*
+(  -> red_base) Tj
+T*
+(  -> optional rule01) Tj
+T*
+(  -> final red curve) Tj
+T*
+() Tj
+T*
+() Tj
+T*
+(Current Defaults) Tj
+T*
+() Tj
+T*
+(median_win          = 9) Tj
+T*
+(spike_TH            = 0.065 m) Tj
+T*
+(jump_TH             = 0.253 m) Tj
+T*
+(rule_base_range_TH  = 1.1 m) Tj
+T*
+(rule01              = off by default) Tj
+T*
+() Tj
+T*
+(Page 3 of 3) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000077 00000 n 
+0000001672 00000 n 
+0000001798 00000 n 
+0000003381 00000 n 
+0000003507 00000 n 
+0000004646 00000 n 
+0000004772 00000 n 
+0000004841 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+4890
+%%EOF

@@ -2,7 +2,7 @@
 
 Static browser version of `jb_A1886_GUItool_check_GEP_dataset_v07.py`.
 
-Current browser title: `A1886 GEP Dataset Checker V10 2026.06.24`.
+Current browser title: `A1886 GEP Dataset Checker V11 2026.06.24`.
 
 ## Use Locally
 
@@ -33,6 +33,7 @@ The page supports:
 - mouse wheel zoom around the selected point
 - default deglitch values: median win `9`, spike TH `0.065 m`, jump TH `0.253 m`
 - optional rule01 post-process: when enabled, if `r0{k+1} >= rule_base_range_TH`, replace it with `r0{k}` and mark the affected point green
+- `Algorithm` button opens `A1886_GEP_algorithm_summary_v01.pdf`
 
 ## Deploy to GitHub Pages
 

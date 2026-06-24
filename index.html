@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V10 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V11 2026.06.24</title>
   <style>
     :root {
       color-scheme: light;
@@ -183,7 +183,7 @@
 
     .source-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 6px;
     }
 
@@ -191,6 +191,10 @@
       border-color: var(--focus);
       background: var(--focus);
       color: #fff;
+    }
+
+    .source-grid .wide {
+      grid-column: span 2;
     }
 
     textarea {
@@ -314,7 +318,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V10 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V11 2026.06.24</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -334,6 +338,7 @@
           <button id="sourceLocal" type="button">1 Local file</button>
           <button id="sourceRepo" type="button">2 GitHub file</button>
           <button id="sourceDropbox" type="button">3 Dropbox link</button>
+          <button id="openAlgorithm" class="wide" type="button">Algorithm</button>
         </div>
       </div>
 
@@ -447,6 +452,7 @@
       sourceLocal: document.getElementById("sourceLocal"),
       sourceRepo: document.getElementById("sourceRepo"),
       sourceDropbox: document.getElementById("sourceDropbox"),
+      openAlgorithm: document.getElementById("openAlgorithm"),
       sourceHint: document.getElementById("sourceHint"),
       fileInput: document.getElementById("fileInput"),
       dropboxPanel: document.getElementById("dropboxPanel"),
@@ -1144,6 +1150,10 @@
       }
       els.sourceHint.textContent = "";
       await listDropboxFiles(true);
+    });
+
+    els.openAlgorithm.addEventListener("click", () => {
+      window.open("A1886_GEP_algorithm_summary_v01.pdf", "_blank", "noopener");
     });
 
     els.dropboxLinks.addEventListener("paste", scheduleDropboxLoad);
