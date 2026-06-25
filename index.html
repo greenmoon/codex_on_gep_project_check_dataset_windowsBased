@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V16 2026.06.25 11:46</title>
+  <title>A1886 GEP Dataset Checker V17 2026.06.25 13:05</title>
   <style>
     :root {
       color-scheme: light;
@@ -253,6 +253,61 @@
       background: #fff;
     }
 
+    .auth-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .auth-panel {
+      width: min(420px, 100%);
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      text-align: center;
+    }
+
+    .auth-panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .auth-panel .auth-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .auth-panel input {
+      height: 32px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .auth-panel button {
+      height: 32px;
+      padding: 5px 12px;
+    }
+
+    .auth-message {
+      min-height: 18px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .auth-overlay.hidden {
+      display: none;
+    }
+
     canvas {
       display: block;
       width: 100%;
@@ -327,7 +382,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V16 2026.06.25 11:46</h1>
+    <h1>A1886 GEP Dataset Checker V17 2026.06.25 13:05</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -419,6 +474,17 @@
 
       <div class="chart-wrap">
         <canvas id="chart"></canvas>
+        <div class="auth-overlay" id="authOverlay">
+          <div class="auth-panel">
+            <h2>Request for Authorized Code</h2>
+            <label for="authCodeInput">Authorized Code:</label>
+            <div class="auth-row">
+              <input id="authCodeInput" type="text" autocomplete="off" placeholder="xxxxxx">
+              <button id="authSubmit" type="button">Unlock</button>
+            </div>
+            <div class="auth-message" id="authMessage">Curve display is blocked until code passes.</div>
+          </div>
+        </div>
       </div>
       <div>
         <div class="legend">
@@ -455,7 +521,9 @@
       current: { records: [], fns: [], r0s: [], deg: [] },
       parseInfo: {},
       source: "",
-      listedFiles: []
+      listedFiles: [],
+      authorizedCode: "",
+      isAuthorized: false
     };
 
     const els = {
@@ -474,6 +542,10 @@
       infoBox: document.getElementById("infoBox"),
       status: document.getElementById("status"),
       canvas: document.getElementById("chart"),
+      authOverlay: document.getElementById("authOverlay"),
+      authCodeInput: document.getElementById("authCodeInput"),
+      authSubmit: document.getElementById("authSubmit"),
+      authMessage: document.getElementById("authMessage"),
       windowSize: document.getElementById("windowSize"),
       startFn: document.getElementById("startFn"),
       frameMs: document.getElementById("frameMs"),
@@ -490,6 +562,40 @@
 
     const ctx = els.canvas.getContext("2d");
     let plotBox = null;
+
+    async function loadAuthorizedCode() {
+      try {
+        const response = await fetch("authorized_code/code.txt", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        state.authorizedCode = (await response.text()).trim();
+        els.authMessage.textContent = "Authorized Code: xxxxxx";
+      } catch (err) {
+        state.authorizedCode = "";
+        els.authMessage.textContent = `Authorized code file unavailable: ${err.message}`;
+      }
+    }
+
+    function setCurveAuthorized(isAuthorized) {
+      state.isAuthorized = isAuthorized;
+      els.authOverlay.classList.toggle("hidden", isAuthorized);
+      if (isAuthorized) {
+        els.authMessage.textContent = "Authorized code accepted.";
+      }
+      draw();
+    }
+
+    function checkAuthorizedCode() {
+      const expected = state.authorizedCode;
+      const entered = els.authCodeInput.value.trim();
+      if (expected && entered === expected) {
+        setCurveAuthorized(true);
+      } else {
+        state.isAuthorized = false;
+        els.authOverlay.classList.remove("hidden");
+        els.authMessage.textContent = "Request for Authorized Code";
+        draw();
+      }
+    }
 
     function setFormat(format) {
       state.format = format;
@@ -1041,6 +1147,18 @@
 
     function draw() {
       resizeCanvas();
+      if (!state.isAuthorized) {
+        ctx.clearRect(0, 0, els.canvas.clientWidth, els.canvas.clientHeight);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, els.canvas.clientWidth, els.canvas.clientHeight);
+        ctx.fillStyle = "#667085";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("Request for Authorized Code", els.canvas.clientWidth / 2, els.canvas.clientHeight / 2);
+        els.status.textContent = "Curve display blocked. Enter authorized code to view range-fn curve.";
+        return;
+      }
       if (!state.records.length) {
         ctx.clearRect(0, 0, els.canvas.clientWidth, els.canvas.clientHeight);
         els.status.textContent = "Ready.";
@@ -1173,6 +1291,14 @@
       window.open("report/jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC.html", "_blank", "noopener");
     });
 
+    els.authSubmit.addEventListener("click", checkAuthorizedCode);
+
+    els.authCodeInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        checkAuthorizedCode();
+      }
+    });
+
     els.dropboxLinks.addEventListener("paste", scheduleDropboxLoad);
     els.dropboxLinks.addEventListener("change", scheduleDropboxLoad);
     els.dropboxLinks.addEventListener("input", scheduleDropboxLoad);
@@ -1262,7 +1388,7 @@
 
     window.addEventListener("resize", draw);
     setFormat("CSV");
-    fetchRepoFiles(true).then(() => draw());
+    loadAuthorizedCode().then(() => fetchRepoFiles(true)).then(() => draw());
   </script>
 </body>
 </html>

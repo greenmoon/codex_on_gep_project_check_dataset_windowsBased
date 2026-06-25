@@ -2,7 +2,7 @@
 
 Static browser version of `jb_A1886_GUItool_check_GEP_dataset_v07.py`.
 
-Current browser title: `A1886 GEP Dataset Checker V16 2026.06.25 11:46`.
+Current browser title: `A1886 GEP Dataset Checker V17 2026.06.25 13:05`.
 
 ## Use Locally
 
@@ -36,6 +36,7 @@ The page supports:
 - `Show deglitch and rule01 algorithm` button opens styled HTML: `A1886_GEP_algorithm_summary_v01.html`
 - `Refer Report` button opens `report/jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC.html`
 - raw Markdown remains available as `A1886_GEP_algorithm_summary_v01.md`
+- curve display is gated by `authorized_code/code.txt`; edit that file to change the customer code
 
 ## Deploy to GitHub Pages
 
