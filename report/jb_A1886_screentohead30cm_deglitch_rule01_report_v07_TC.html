@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>A1886 Report</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      word-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">A1886 Report</h1>
+</header>
+<h1 id="a1886-規則比較報告-v07">A1886 規則比較報告 v07</h1>
+<p><strong>檔案名稱：</strong> <code>jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC.md</code><br />
+<strong>測試資料：</strong> <code>screen to head 30cm.csv</code><br />
+<strong>比較項目：</strong> <code>run deglitch</code> vs <code>run deglitch + rule01</code><br />
+<strong>公司：</strong> Joybien Technologies<br />
+<strong>版本：</strong> v07 TC</p>
+<hr />
+<h2 id="報告目的">1. 報告目的</h2>
+<p>本報告依據 A1886 GEP Dataset Checker V10 畫面，針對 <code>screen to head 30cm.csv</code> 進行兩種處理方式比較：</p>
+<ol type="1">
+<li><strong>run deglitch</strong>：只執行 r0 去毛刺處理，未啟用 rule01。</li>
+<li><strong>run deglitch + rule01</strong>：先執行 r0 去毛刺，再啟用 rule01 做第二層規則檢查。</li>
+</ol>
+<p>目的為確認：</p>
+<ul>
+<li><code>deglitch</code> 是否能降低 <code>r0_raw</code> 的短暫尖峰。</li>
+<li><code>rule01</code> 開啟後，是否可進一步標示可疑區段與統計 rule hit。</li>
+<li>針對人體頭部與背景金屬牆同時存在的場景，說明為何曲線上可能出現兩個可能 range 值。</li>
+</ul>
+<hr />
+<h2 id="測試資料與共同參數">2. 測試資料與共同參數</h2>
+<table>
+<thead>
+<tr class="header">
+<th>項目</th>
+<th style="text-align: right;">設定值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Input format</td>
+<td style="text-align: right;">CSV</td>
+</tr>
+<tr class="even">
+<td>檔案</td>
+<td style="text-align: right;"><code>screen to head 30cm.csv</code></td>
+</tr>
+<tr class="odd">
+<td>Records</td>
+<td style="text-align: right;">1308</td>
+</tr>
+<tr class="even">
+<td>fn 範圍</td>
+<td style="text-align: right;">391 .. 1698</td>
+</tr>
+<tr class="odd">
+<td>Window size N</td>
+<td style="text-align: right;">1308</td>
+</tr>
+<tr class="even">
+<td>Start fn</td>
+<td style="text-align: right;">391</td>
+</tr>
+<tr class="odd">
+<td>Frame tick</td>
+<td style="text-align: right;">50.000 ms/frame</td>
+</tr>
+<tr class="even">
+<td>Median win</td>
+<td style="text-align: right;">9</td>
+</tr>
+<tr class="odd">
+<td>Spike TH m</td>
+<td style="text-align: right;">0.065</td>
+</tr>
+<tr class="even">
+<td>Jump TH m</td>
+<td style="text-align: right;">0.253</td>
+</tr>
+<tr class="odd">
+<td>rule_base_range_TH</td>
+<td style="text-align: right;">1.1 m</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="左圖run-deglitchrule01-關閉">3. 左圖：run deglitch（rule01 關閉）</h2>
+<p>說明：此圖僅執行 <code>deglitch</code>，<code>rule01</code> 未開啟。狀態列顯示：</p>
+<pre class="text"><code>rule01=off, rule_hits=0</code></pre>
+<figure>
+<img src="./jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC_assets/run_deglitch_rule01_off.png" alt="run deglitch, rule01 off" /><figcaption aria-hidden="true">run deglitch, rule01 off</figcaption>
+</figure>
+<p><strong>圖 1．run deglitch 畫面。</strong><br />
+紅色 <code>r0_deglitch</code> 已可降低部分藍色 <code>r0_raw</code> 尖峰影響，但仍可看到多個高值跳動區段。</p>
+<hr />
+<h2 id="右圖run-deglitch-rule01rule01-開啟">4. 右圖：run deglitch + rule01（rule01 開啟）</h2>
+<p>說明：此圖啟用 <code>rule01</code>，綠色點為 rule hit 標示。狀態列顯示：</p>
+<pre class="text"><code>rule01=on, rule_hits=424</code></pre>
+<figure>
+<img src="./jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC_assets/run_rule01_on.png" alt="run rule01, rule01 on" /><figcaption aria-hidden="true">run rule01, rule01 on</figcaption>
+</figure>
+<p><strong>圖 2．run rule01 畫面。</strong><br />
+<code>rule01</code> 開啟後，可在原本 <code>deglitch</code> 的基礎上，額外標示與統計可疑點。</p>
+<hr />
+<h2 id="主要觀察">5. 主要觀察</h2>
+<ul>
+<li>兩張圖使用相同資料與相同 deglitch 參數，因此可直接比較 <code>rule01</code> 開啟前後差異。</li>
+<li>只執行 <code>deglitch</code> 時，紅色 <code>r0_deglitch</code> 已可降低部分 <code>r0_raw</code> 尖峰影響。</li>
+<li>啟用 <code>rule01</code> 後，系統額外標示規則命中點；本次畫面顯示 <code>rule_hits = 424</code>。</li>
+<li><code>rule01</code> 可作為第二層檢查，用於標示與統計可疑區段，利於後續條件調整。</li>
+</ul>
+<hr />
+<h2 id="差異摘要">6. 差異摘要</h2>
+<table>
+<thead>
+<tr class="header">
+<th>比較項目</th>
+<th style="text-align: right;">run deglitch</th>
+<th style="text-align: right;">run rule01</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Enable rule01</td>
+<td style="text-align: right;">關閉</td>
+<td style="text-align: right;">開啟</td>
+</tr>
+<tr class="even">
+<td>rule01 狀態</td>
+<td style="text-align: right;"><code>rule01=off</code></td>
+<td style="text-align: right;"><code>rule01=on</code></td>
+</tr>
+<tr class="odd">
+<td>rule_hits</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">424</td>
+</tr>
+<tr class="even">
+<td>額外標記</td>
+<td style="text-align: right;">無綠色 rule hit 標記</td>
+<td style="text-align: right;">有綠色 rule hit 標記</td>
+</tr>
+<tr class="odd">
+<td>用途</td>
+<td style="text-align: right;">觀察基本去毛刺效果</td>
+<td style="text-align: right;">在去毛刺後再加入 rule01 規則檢查</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="補充說明為何曲線上可能同時出現兩個-range-值">7. 補充說明：為何曲線上可能同時出現兩個 range 值</h2>
+<p>下圖提供幾何與反射強度的概念說明，用來解釋為何在某些量測曲線上，系統可能同時或交替報告兩個可能的 range 值。</p>
+<figure>
+<img src="./jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC_assets/radar_head_wall_geometry.jpeg" alt="radar human head background metal wall geometry" /><figcaption aria-hidden="true">radar human head background metal wall geometry</figcaption>
+</figure>
+<p><strong>圖 3．人頭與背景金屬牆的幾何示意圖。</strong><br />
+此圖用於說明為何較近的人頭與較遠的金屬牆都可能形成可見回波。</p>
+<hr />
+<h2 id="物理解釋與對應到曲線的原因">8. 物理解釋與對應到曲線的原因</h2>
+<p>當前方有人頭、後方又有大型金屬牆時，雷達在視場角（FOV）內可能同時接收到兩類回波：</p>
+<ol type="1">
+<li><strong>較近的人頭回波</strong>：距離較近，但人體頭部的雷達散射截面（RCS）可能較小。</li>
+<li><strong>較遠的背景金屬牆回波</strong>：距離較遠，但金屬牆 / 鉛牆的 RCS 可能較大。</li>
+</ol>
+<p>幾何上，人頭只遮住中央部分角度；左右兩側仍有一部分背景牆面保持可見，因此背景牆回波不一定會完全消失。</p>
+<p>因此在曲線或候選 range 輸出中，就可能出現兩個可能的距離值：</p>
+<ul>
+<li>一個較近，對應人頭或近端目標。</li>
+<li>一個較遠，對應背景金屬牆或多路徑反射。</li>
+</ul>
+<p>若人頭 RCS 較小，而背景金屬牆 RCS 較大，則即使牆面距離更遠，其回波仍可能相當強，甚至在部分 frame 中比人頭回波更容易被選成 candidate peak。</p>
+<hr />
+<h2 id="與本報告的關聯">9. 與本報告的關聯</h2>
+<ul>
+<li>曲線上出現多個高值 / 遠值候選，不一定完全是 random noise，也可能是背景金屬牆的真實回波。</li>
+<li><code>deglitch</code> 可先處理短暫尖峰。</li>
+<li><code>rule01</code> 可作為第二層條件，用來進一步標示與統計可疑區段。</li>
+<li>若應用目標是優先偵測前方人頭，可考慮搭配：
+<ul>
+<li>range ROI</li>
+<li>angle ROI</li>
+<li>previous-valid hold</li>
+<li>target-priority rule</li>
+</ul></li>
+</ul>
+<p>這些方法可降低背景金屬牆回波被誤選為主要距離值的機率。</p>
+<hr />
+<h2 id="結論">10. 結論</h2>
+<p>依據本次 <code>screen to head 30cm.csv</code> 的 V10 畫面比較，<code>deglitch</code> 可先降低 <code>r0_raw</code> 的部分尖峰；在此基礎上再開啟 <code>rule01</code>，可進一步標示與統計可疑點。</p>
+<p>本次 <code>rule01</code> 觸發：</p>
+<pre class="text"><code>rule_hits = 424</code></pre>
+<p>因此，<code>rule01</code> 適合用來分析可疑點分布，作為後續 <code>rule_base_range_TH</code> 或其他規則條件調整的依據。</p>
+<hr />
+<h2 id="建議">11. 建議</h2>
+<ul>
+<li>若目標是觀察基本平滑效果，可先使用 <code>run deglitch</code>。</li>
+<li>若目標是檢查可疑區段與規則命中，建議啟用 <code>run rule01</code>。</li>
+<li>後續可依 <code>rule_hits</code> 數量與命中位置，微調 <code>rule_base_range_TH</code> 或加入更細的條件分層。</li>
+<li>若場景中存在背景金屬牆，建議將 rule-based filtering 與幾何 / RCS 觀點一起考慮，而不是只把所有遠距離 peak 視為 random glitch。</li>
+</ul>
+<hr />
+<h2 id="repo-push-建議">12. Repo push 建議</h2>
+<p>建議 repo 內放置：</p>
+<pre class="text"><code>reports/
+  jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC.md
+  jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC_assets/
+    run_deglitch_rule01_off.png
+    run_rule01_on.png
+    radar_head_wall_geometry.jpeg</code></pre>
+<hr />
+<p><strong>Joybien Technologies</strong><br />
+<code>jb_A1886_screentohead30cm_deglitch_rule01_report_v07_TC.md</code></p>
+</body>
+</html>
