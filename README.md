@@ -2,7 +2,7 @@
 
 Static browser version of `jb_A1886_GUItool_check_GEP_dataset_v07.py`.
 
-Current browser title: `A1886 GEP Dataset Checker V14 2026.06.24`.
+Current browser title: `A1886 GEP Dataset Checker V15 2026.06.25 11:33`.
 
 ## Use Locally
 
@@ -34,6 +34,7 @@ The page supports:
 - default deglitch values: median win `9`, spike TH `0.065 m`, jump TH `0.253 m`
 - optional rule01 post-process: when enabled, if `r0{k+1} >= rule_base_range_TH`, replace it with `r0{k}` and mark the affected point green
 - `Show deglitch and rule01 algorithm` button opens styled HTML: `A1886_GEP_algorithm_summary_v01.html`
+- `Refer Report` button opens `report/index.html` to browse report Markdown and assets
 - raw Markdown remains available as `A1886_GEP_algorithm_summary_v01.md`
 
 ## Deploy to GitHub Pages

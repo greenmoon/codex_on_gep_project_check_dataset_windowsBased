@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>A1886 GEP Dataset Checker V14 2026.06.24</title>
+  <title>A1886 GEP Dataset Checker V15 2026.06.25 11:33</title>
   <style>
     :root {
       color-scheme: light;
@@ -194,6 +194,8 @@
     }
 
     .algorithm-action {
+      display: grid;
+      gap: 6px;
       margin-top: auto;
     }
 
@@ -325,7 +327,7 @@
 </head>
 <body>
   <header>
-    <h1>A1886 GEP Dataset Checker V14 2026.06.24</h1>
+    <h1>A1886 GEP Dataset Checker V15 2026.06.25 11:33</h1>
     <div class="version">Browser port of jb_A1886_GUItool_check_GEP_dataset_v07.py</div>
   </header>
 
@@ -371,6 +373,7 @@
       <div class="meta" id="infoBox">No file loaded.</div>
       <div class="algorithm-action">
         <button id="openAlgorithm" type="button">Show deglitch and rule01 algorithm</button>
+        <button id="openReport" type="button">Refer Report</button>
       </div>
     </aside>
 
@@ -462,6 +465,7 @@
       sourceRepo: document.getElementById("sourceRepo"),
       sourceDropbox: document.getElementById("sourceDropbox"),
       openAlgorithm: document.getElementById("openAlgorithm"),
+      openReport: document.getElementById("openReport"),
       sourceHint: document.getElementById("sourceHint"),
       fileInput: document.getElementById("fileInput"),
       dropboxPanel: document.getElementById("dropboxPanel"),
@@ -1163,6 +1167,10 @@
 
     els.openAlgorithm.addEventListener("click", () => {
       window.open("A1886_GEP_algorithm_summary_v01.html", "_blank", "noopener");
+    });
+
+    els.openReport.addEventListener("click", () => {
+      window.open("report/", "_blank", "noopener");
     });
 
     els.dropboxLinks.addEventListener("paste", scheduleDropboxLoad);
