@@ -193,6 +193,17 @@
       color: #fff;
     }
 
+    .algorithm-action {
+      margin-top: auto;
+    }
+
+    .algorithm-action button {
+      width: 100%;
+      height: auto;
+      min-height: 32px;
+      padding: 6px 8px;
+    }
+
     textarea {
       width: 100%;
       min-height: 58px;
@@ -334,7 +345,6 @@
           <button id="sourceLocal" type="button">1 Local file</button>
           <button id="sourceRepo" type="button">2 GitHub file</button>
           <button id="sourceDropbox" type="button">3 Dropbox link</button>
-          <button id="openAlgorithm" type="button">Show deglitch and rule01 algorithm</button>
         </div>
       </div>
 
@@ -359,6 +369,9 @@
       </div>
 
       <div class="meta" id="infoBox">No file loaded.</div>
+      <div class="algorithm-action">
+        <button id="openAlgorithm" type="button">Show deglitch and rule01 algorithm</button>
+      </div>
     </aside>
 
     <section class="workspace">
